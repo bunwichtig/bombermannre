@@ -18,7 +18,6 @@ const EMPTY = 0, WALL = 1, CRATE = 2;
 const MAX_PLAYERS = 6;
 const FUSE = 2.5;            // Sekunden bis zur Explosion
 const FLAME_TIME = 0.55;     // Sekunden, die das Feuer brennt
-const ROUND_TIME = 180;      // Sekunden pro Runde
 const WIN_ROUNDS = 3;        // Standard: Runden bis zum Gesamtsieg
 const MAX_WINS = 5;
 const KICK_SPEED = 10;       // Felder pro Sekunde für gekickte Bomben
@@ -39,7 +38,8 @@ const MODES = { klassisch: 'Klassisch', individuell: 'Individuell' };
 const SIZES = { klein: [11, 9], mittel: [15, 13], gross: [19, 15], riesig: [23, 17] };
 const SIZE_LABEL = { klein: 'Klein (11 × 9)', mittel: 'Mittel (15 × 13)', gross: 'Groß (19 × 15)', riesig: 'Riesig (23 × 17)' };
 const VARIANTS = { klassisch: 'Klassisch', schrumpf: 'Schrumpfendes Feld' };
-const SHRINK_AT = 60;        // Sekunden vor Rundenende, ab denen das Feld schrumpft
+const SHRINK_AT = 120;       // Runden haben kein Zeitlimit; im Modus „Schrumpfendes Feld“ fallen ab 2:00 Blöcke
+const SHRINK_DUR = 58;       // so lange dauert das Schrumpfen, bis das Feld zu ist
 const MEGA_LIST = ['mega', 'pierce', 'shield', 'ghost', 'remote'];
 const MEGA_NAME = { mega: 'Megafeuer', pierce: 'Durchschlag', shield: 'Schild', ghost: 'Geist', remote: 'Fernzünder' };
 // megaW: Gewichtung der einzelnen Mega-Items untereinander (0 = kommt nicht vor)
@@ -256,7 +256,7 @@ class Game {
       Object.assign(p, { x, y, alive: true, dir: 'down', moving: false, maxBombs: 1, range: 2, speed: BASE_SPEED, kick: false, pierce: false, shield: false, ghost: 0, grace: 0, remote: false });
       p.lastBomb = p.input.bomb; p.lastDet = p.input.det;
     });
-    this.clock = ROUND_TIME;
+    this.clock = 0; // zählt die Spielzeit der Runde hoch, es gibt kein Zeitlimit
     this.shrink = this.rules.variant === 'schrumpf' ? this.spiral() : [];
     this.shrinkTimer = 0;
     this.phase = 'play';
@@ -415,10 +415,10 @@ class Game {
     // play
     if (this.phaseTimer > 0) { this.phaseTimer -= dt; if (this.phaseTimer <= 0) this.msg = ''; }
     const before = this.clock;
-    this.clock -= dt;
-    if (this.shrink.length && this.clock <= SHRINK_AT) {
-      if (before > SHRINK_AT) { this.msg = 'Das Feld schrumpft!'; this.phaseTimer = 1.5; }
-      const every = (SHRINK_AT - 2) / (this.spiral().length || 1);
+    this.clock += dt;
+    if (this.shrink.length && this.clock >= SHRINK_AT) {
+      if (before < SHRINK_AT) { this.msg = 'Das Feld schrumpft!'; this.phaseTimer = 1.5; }
+      const every = SHRINK_DUR / (this.spiral().length || 1);
       this.shrinkTimer -= dt;
       while (this.shrinkTimer <= 0 && this.shrink.length) {
         this.shrinkTimer += every;
@@ -500,10 +500,9 @@ class Game {
     if (this.phase !== 'play') return;
     const alive = this.players.filter((p) => p.alive);
     const solo = this.players.length === 1;
-    const over = force || this.clock <= 0 || (solo ? alive.length === 0 : alive.length <= 1);
+    const over = force || (solo ? alive.length === 0 : alive.length <= 1);
     if (!over) return;
-    if (this.clock <= 0 && alive.length > 1) { this.msg = 'Zeit abgelaufen – unentschieden'; }
-    else if (alive.length === 1 && !solo) {
+    if (alive.length === 1 && !solo) {
       const w = alive[0]; w.score++;
       if (w.score >= this.rules.wins) { this.phase = 'matchEnd'; this.msg = w.name + ' gewinnt das Spiel! 🏆'; return; }
       this.msg = w.name + ' gewinnt die Runde';
@@ -1147,7 +1146,7 @@ function soundsFor(v) {
   const key = (b) => b[0] + ',' + b[1];
   const oldF = new Set(p.flames.map(key));
   if (v.flames.some((f) => !oldF.has(key(f)))) Sound.play('boom');
-  else if (v.grid !== p.grid && v.variant === 'schrumpf' && v.clock <= SHRINK_AT && (v.grid.split('1').length > p.grid.split('1').length)) Sound.play('thud');
+  else if (v.grid !== p.grid && v.variant === 'schrumpf' && v.clock >= SHRINK_AT && (v.grid.split('1').length > p.grid.split('1').length)) Sound.play('thud');
   else if (v.bombs.length > p.bombs.length) Sound.play('place');
   const before = new Map(p.players.map((q) => [q.id, q]));
   for (const q of v.players) {
@@ -1157,7 +1156,6 @@ function soundsFor(v) {
     else if (q.alive && (q.bombs > o.bombs || q.range > o.range || q.speed > o.speed || (q.kick && !o.kick))) Sound.play('pickup');
     else if (q.alive && o.shield && !q.shield) Sound.play('shieldhit');
   }
-  if (v.clock <= 10 && v.clock < p.clock && v.clock > 0) Sound.play('tick');
 }
 
 // ---------- Zeichnen ----------
@@ -1196,8 +1194,7 @@ function draw(v, isHost) {
   // Anzeige oben
   const hud = v.players.map((p) =>
     `<span class="hud-p${p.alive || v.phase === 'lobby' ? '' : ' dead'}"><span class="dot" style="background:${p.color}"></span>${esc(p.name)} <b>${'★'.repeat(p.score)}${'☆'.repeat(Math.max(0, (v.wins || WIN_ROUNDS) - p.score))}</b>` +
-    (p.id === S.myId ? ` <small>💣${p.bombs} 🔥${p.range} 👟${p.speed}${p.kick ? ' 🦶' : ''}${p.pierce ? ' 💥' : ''}${p.shield ? ' 🛡️' : ''}${p.ghost ? ' 👻' + p.ghost : ''}${p.remote ? ' 📡 Strg' : ''}</small>` : '') + '</span>').join('') +
-    `<span class="hud-t">⏱ ${Math.floor(v.clock / 60)}:${String(v.clock % 60).padStart(2, '0')}</span>`;
+    (p.id === S.myId ? ` <small>💣${p.bombs} 🔥${p.range} 👟${p.speed}${p.kick ? ' 🦶' : ''}${p.pierce ? ' 💥' : ''}${p.shield ? ' 🛡️' : ''}${p.ghost ? ' 👻' + p.ghost : ''}${p.remote ? ' 📡 Strg' : ''}</small>` : '') + '</span>').join('');
   if (hud !== lastHud) { $('hud').innerHTML = hud; lastHud = hud; }
   const ov = $('overlay');
   ov.classList.toggle('hidden', !v.msg);
