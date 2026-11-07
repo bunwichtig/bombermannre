@@ -54,3 +54,7 @@ python -m http.server 8000
 ```
 
 Dann `http://localhost:8000/?local` in zwei Tabs öffnen. Mit `?local` laufen die Tabs ohne Internet über den Browser selbst.
+
+## Technik für andere Spiele
+
+Wie der Online-Mehrspielermodus funktioniert und wie man ihn in ein anderes Spiel einbaut, steht in [docs/online-multiplayer.md](docs/online-multiplayer.md).
