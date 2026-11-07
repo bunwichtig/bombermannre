@@ -167,10 +167,12 @@
   <!-- Spiel -->
   <section id="screen-game" class="hidden">
     <div class="game-layout">
-      <aside class="panel rank-side">
-        <h2>🏆 Rangliste</h2>
-        <div class="ranking"></div>
-        <div id="chat-slot-game"></div>
+      <aside class="game-side">
+        <div class="panel chat-panel"><div id="chat-slot-game"></div></div>
+        <div class="panel rank-side">
+          <h2>🏆 Rangliste</h2>
+          <div class="ranking"></div>
+        </div>
       </aside>
       <div class="game-main">
         <div id="hud"></div>
@@ -196,7 +198,7 @@
             <button id="touch-bomb">💣</button>
           </div>
         </div>
-        <div class="row center">
+        <div class="row center game-btns">
           <button id="btn-again" class="hidden">Neues Spiel</button>
           <button id="btn-mute" class="secondary"></button>
         </div>
