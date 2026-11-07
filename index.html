@@ -82,11 +82,14 @@
   </section>
 
   <!-- Lobby -->
-  <section id="screen-lobby" class="panel hidden">
-    <div id="chat-slot-lobby"></div>
-    <h2>Raum <span id="lobby-room"></span></h2>
-    <ul id="lobby-players"></ul>
-    <div class="invite">
+  <section id="screen-lobby" class="lobby hidden">
+    <div class="panel lcard lcard-chat"><div id="chat-slot-lobby"></div></div>
+    <div class="panel lcard">
+      <h2>Raum <span id="lobby-room"></span></h2>
+      <ul id="lobby-players"></ul>
+    </div>
+    <div class="panel lcard invite">
+      <h2>🔗 Einladen</h2>
       <label for="inv-link">Einladungslink zum Teilen</label>
       <div class="inv-row">
         <input id="inv-link" readonly>
@@ -96,6 +99,8 @@
       <label class="inv-pw"><input type="checkbox" id="inv-pw" checked> Passwort im Link mitschicken</label>
       <p id="inv-msg" class="note" role="status">Wer den Link öffnet, muss nur noch einen Namen eingeben und beitreten.</p>
     </div>
+    <div class="panel lcard">
+    <h2>🎮 Spielmodus</h2>
     <form id="settings" class="settings" onsubmit="return false">
       <div class="mode-pick" role="radiogroup" aria-label="Spielmodus">
         <label><input type="radio" name="mode" value="klassisch" checked><span>Klassisch</span></label>
@@ -154,8 +159,11 @@
     <div class="row">
       <button id="btn-start" class="hidden">Spiel starten</button>
     </div>
-    <h2 class="rank-title">🏆 Rangliste</h2>
-    <div class="ranking"></div>
+    </div>
+    <div class="panel lcard">
+      <h2 class="rank-title">🏆 Rangliste</h2>
+      <div class="ranking"></div>
+    </div>
     <div class="row center leave-row"><button id="btn-leave" class="secondary">Verlassen</button></div>
   </section>
 
