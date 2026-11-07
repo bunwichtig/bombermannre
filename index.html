@@ -29,7 +29,7 @@
       <p><b>Steuerung:</b> Pfeiltasten oder WASD zum Laufen, Leertaste oder Enter für eine Bombe, Strg zündet Fernzünder-Bomben. Auf dem Handy gibt es Tasten unter dem Spielfeld.</p>
       <p><b>Power-ups:</b> 💣 eine Bombe mehr, 🔥 größere Explosion, 👟 schneller laufen, 🦶 Bomben wegkicken.</p>
       <p><b>Mega-Items</b> (mit bunt leuchtendem Rahmen, Anteil in der Lobby einstellbar): 🌟 Megafeuer – maximale Explosion und eine Bombe mehr, 💥 Durchschlag – deine Explosionen gehen durch Kisten, 🛡️ Schild – übersteht einen Treffer, 👻 Geist – 10 Sekunden durch Kisten und Bomben laufen, 📡 Fernzünder – deine Bomben gehen erst hoch, wenn du Strg drückst (spätestens nach 20 Sekunden).</p>
-      <p><b>Regeln:</b> Wer von einer Explosion getroffen wird, ist für die Runde raus. Wer zuerst die eingestellte Zahl an Runden gewinnt (Standard 3), gewinnt das Spiel.</p>
+      <p><b>Regeln:</b> Wer von einer Explosion getroffen wird, ist für die Runde raus. Wer als Letzter stehen bleibt, gewinnt die Runde. Es geht endlos weiter, jeder Rundensieg zählt in der Rangliste.</p>
     </details>
   </section>
   <section id="rank-start" class="panel rank-panel">
@@ -146,11 +146,6 @@
             <input name="w_remote" type="range" min="0" max="100" step="5" value="100">
           </label>
       </details>
-      <label>Rundensiege zum Gewinnen
-        <select name="wins">
-          <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
-        </select>
-      </label>
       </div>
       <p id="settings-note" class="note"></p>
     </form>
@@ -195,7 +190,7 @@
           </div>
         </div>
         <div class="row center">
-          <button id="btn-again" class="hidden">Neues Spiel</button>
+          <button id="btn-again" class="hidden secondary" title="Zurück zur Lobby, Siege dieser Sitzung auf 0">Zur Lobby</button>
           <button id="btn-mute" class="secondary"></button>
           <button id="btn-quit" class="secondary">Verlassen</button>
         </div>
