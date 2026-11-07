@@ -23,6 +23,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      # Versionskennung eintragen: neue Dateinamen-Anhänge umgehen alte Browser-Caches
+      - name: Version eintragen
+        run: |
+          V="${GITHUB_SHA::7}"
+          sed -i "s/__VERSION__/$V/g" index.html game.js
+          echo "$V" > version.txt
       # Veröffentlicht das Spiel (Hauptordner)
       - uses: actions/upload-pages-artifact@v3
         with:

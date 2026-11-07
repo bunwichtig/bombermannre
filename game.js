@@ -11,6 +11,8 @@
 
 // ---------- Konstanten ----------
 let W = 15, H = 13;         // Feldgröße, wird über die Einstellungen gesetzt
+// Wird beim Veröffentlichen durch die Commit-Kennung ersetzt (siehe .github/workflows/pages.yml)
+const VERSION = '__VERSION__';
 const T = 48;
 const EMPTY = 0, WALL = 1, CRATE = 2;
 const MAX_PLAYERS = 6;
@@ -1251,4 +1253,26 @@ function roundRect(x, y, w, h, r) {
 
 // Für Tests von außen erreichbar
 window.Funkenfeld = { Game, S, Sound };
+// ---------- Neue Version erkennen ----------
+// GitHub Pages lässt Browser Dateien bis zu 10 Minuten zwischenspeichern. Darum fragt das Spiel
+// version.txt ohne Cache ab und bietet bei einer neuen Version einen Knopf zum Neuladen an.
+(function updateCheck() {
+  if (VERSION.startsWith('__')) return; // lokal ohne Veröffentlichung
+  let newer = null;
+  async function check() {
+    try {
+      const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
+      if (!r.ok) return;
+      const v = (await r.text()).trim();
+      if (v && v !== VERSION) { newer = v; $('update-bar').classList.remove('hidden'); }
+    } catch (e) {}
+  }
+  $('btn-update').addEventListener('click', () => {
+    const q = new URLSearchParams(location.search); q.set('v', newer || Date.now());
+    location.replace(location.pathname + '?' + q.toString() + location.hash);
+  });
+  check();
+  setInterval(() => { if (!inGame()) check(); }, 120000);
+})();
+
 })();

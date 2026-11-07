@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Funkenfeld</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=__VERSION__">
 </head>
 <body>
 <main id="app">
@@ -202,8 +202,13 @@
       </div>
     </div>
   </section>
+  <div id="update-bar" class="update-bar hidden" role="status">
+    <span>Es gibt eine neue Version von Funkenfeld.</span>
+    <button id="btn-update" type="button">Jetzt laden</button>
+  </div>
+  <p class="ver">Version __VERSION__</p>
 </main>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<script src="game.js"></script>
+<script src="game.js?v=__VERSION__"></script>
 </body>
 </html>
