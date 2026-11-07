@@ -118,18 +118,32 @@ canvas { display: block; width: 100%; height: auto; border-radius: 8px; image-re
 .mode-pick input:disabled + span { cursor: default; }
 #mode-note { margin: 6px 0 14px; }
 
-/* Spielansicht: Rangliste links, Spielfeld rechts und größer */
+/* Spielansicht: links oben Chat, links unten Rangliste, beide bündig mit dem Spielfeld */
 body.ingame #app { max-width: 1280px; }
-.game-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 16px; align-items: start; }
-.rank-side { max-width: none; margin: 0; padding: 14px; position: sticky; top: 16px; }
-.rank-side h2 { font-size: 1.1rem; margin-bottom: 8px; }
+.game-layout { display: grid; grid-template-columns: 260px min(calc(100% - 276px), calc((100vh - 230px) * var(--ar, 1.15)));
+  grid-template-areas: ". hud" ". ctl" ". note" "side stage" ". touch" ". btns"; column-gap: 16px; justify-content: center; }
+.game-main { display: contents; }
+#hud { grid-area: hud; } .ctl-pick { grid-area: ctl; } #ctl-note { grid-area: note; } #stage { grid-area: stage; }
+#touch { grid-area: touch; } .game-main > .row { grid-area: btns; }
+.game-side { grid-area: side; display: flex; flex-direction: column; gap: 12px; min-height: 0; contain: size; }
+.game-side .panel { max-width: none; margin: 0; padding: 12px; }
+.chat-panel { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+.chat-panel #chat-slot-game { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+#chat-slot-game .chat { flex: 1; min-height: 0; margin: 0; padding: 0; border: 0; }
+#chat-slot-game .chat-log { flex: 1; max-height: none; min-height: 0; }
+.rank-side { flex: none; max-height: 45%; overflow-y: auto; }
+.rank-side h2 { font-size: 1.05rem; margin-bottom: 6px; }
 .rank-side .ranking table { font-size: .85rem; }
-.rank-side .ranking th, .rank-side .ranking td { padding: 6px 3px; }
-#stage { max-width: min(100%, calc((100vh - 250px) * var(--ar, 1.15))); }
+.rank-side .ranking th, .rank-side .ranking td { padding: 5px 3px; }
+/* Ton an/aus am PC oben rechts, etwas größer */
+@media (min-width: 861px) {
+  body.ingame #btn-mute { position: fixed; top: 14px; right: 16px; z-index: 20; min-width: 0; padding: 10px 16px; font-size: 1.05rem; }
+}
 @media (max-width: 860px) {
-  .game-layout { grid-template-columns: 1fr; }
-  .rank-side { order: 2; position: static; }
-  #stage { max-width: 100%; }
+  .game-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "hud" "ctl" "note" "stage" "touch" "btns" "side"; }
+  .game-side { contain: none; margin-top: 12px; }
+  .chat-panel { display: contents; }
+  .rank-side { max-height: none; }
 }
 
 /* Technik-Erklärung */
