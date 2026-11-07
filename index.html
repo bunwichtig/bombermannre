@@ -153,10 +153,10 @@
     <p id="lobby-hint" class="msg"></p>
     <div class="row">
       <button id="btn-start" class="hidden">Spiel starten</button>
-      <button id="btn-leave" class="secondary">Verlassen</button>
     </div>
     <h2 class="rank-title">🏆 Rangliste</h2>
     <div class="ranking"></div>
+    <div class="row center leave-row"><button id="btn-leave" class="secondary">Verlassen</button></div>
   </section>
 
   <!-- Spiel -->
@@ -194,10 +194,10 @@
         <div class="row center">
           <button id="btn-again" class="hidden secondary" title="Zurück zur Lobby, Siege dieser Sitzung auf 0">Zur Lobby</button>
           <button id="btn-mute" class="secondary"></button>
-          <button id="btn-quit" class="secondary">Verlassen</button>
         </div>
       </div>
     </div>
+    <div class="row center leave-row"><button id="btn-quit" class="secondary">Verlassen</button></div>
   </section>
   <div id="update-bar" class="update-bar hidden" role="status">
     <span>Es gibt eine neue Version von BombRe.</span>
@@ -206,6 +206,7 @@
   <p class="ver">Version __VERSION__</p>
   <!-- Chat: wird je nach Bildschirm in die Lobby oder neben das Spielfeld gehängt -->
   <div id="chat" class="chat hidden">
+    <div class="chat-grip" aria-hidden="true"></div>
     <div class="chat-head">
       <b>💬 Chat</b>
       <label class="chat-pop" title="Neue Nachrichten kurz über dem Spielfeld einblenden"><input type="checkbox" id="chat-popup" checked> Popups</label>

@@ -614,7 +614,7 @@ function hostChat(p, text) {
   Chat.add(m);
 }
 const Chat = {
-  log: [], unread: 0, open: false,
+  log: [], unread: 0, open: false, screen: '',
   popups: (() => { try { return localStorage.getItem('ff-chat-popup') !== 'aus'; } catch (e) { return true; } })(),
   mobile: () => matchMedia('(max-width: 860px)').matches,
   visible() { return !$('chat').classList.contains('hidden') && (!Chat.mobile() || Chat.open); },
@@ -652,6 +652,10 @@ const Chat = {
   },
   place(screen) {
     const on = screen === 'lobby' || screen === 'game';
+    // Auf dem Handy startet der Chat bei jedem Betreten eines Raums aufgeklappt.
+    const wasOn = Chat.screen === 'lobby' || Chat.screen === 'game';
+    Chat.screen = screen;
+    if (on && !wasOn && Chat.mobile()) Chat.setOpen(true);
     $('chat').classList.toggle('hidden', !on);
     $('chat-toggle').classList.toggle('hidden', !on);
     if (!on) { Chat.setOpen(false); return; }
@@ -981,10 +985,17 @@ $('touch-det').addEventListener('pointerdown', (e) => { e.preventDefault(); deto
 // läuft die Figur weiter. Kurz tippen legt eine Bombe.
 const SWIPE_MIN = 18, TAP_MAX = 12;
 let ctlMode = 'tasten';
-try { if (localStorage.getItem('ff-ctl') === 'wischen') ctlMode = 'wischen'; } catch (e) {}
-function setCtl(mode) {
+// Ohne eigene Wahl: auf Handys (Touch-Bildschirm) ist Wischen voreingestellt, sonst Tasten.
+// Gespeichert wird nur, was jemand selbst anklickt (Schlüssel ff-steuerung; das alte ff-ctl wurde
+// schon beim bloßen Laden geschrieben und taugt deshalb nicht als echte Wahl).
+try {
+  const saved = localStorage.getItem('ff-steuerung');
+  const touch = matchMedia('(pointer: coarse)').matches;
+  if (touch && (saved === 'wischen' || !saved)) ctlMode = 'wischen';
+} catch (e) {}
+function setCtl(mode, save) {
   ctlMode = mode === 'wischen' ? 'wischen' : 'tasten';
-  try { localStorage.setItem('ff-ctl', ctlMode); } catch (e) {}
+  if (save) try { localStorage.setItem('ff-steuerung', ctlMode); } catch (e) {}
   document.querySelectorAll('input[name=ctl]').forEach((r) => { r.checked = r.value === ctlMode; });
   document.body.classList.toggle('ctl-wischen', ctlMode === 'wischen');
   $('ctl-note').textContent = ctlMode === 'wischen'
@@ -992,7 +1003,7 @@ function setCtl(mode) {
     : 'Steuerkreuz und Bombenknopf unter dem Spielfeld.';
   swipeDir = null; updateDir();
 }
-document.querySelectorAll('input[name=ctl]').forEach((r) => r.addEventListener('change', () => setCtl(r.value)));
+document.querySelectorAll('input[name=ctl]').forEach((r) => r.addEventListener('change', () => setCtl(r.value, true)));
 setCtl(ctlMode);
 (function swipe() {
   const area = $('stage');
@@ -1358,6 +1369,28 @@ window.Funkenfeld = { Game, S, Sound };
 $('chat-form').addEventListener('submit', (e) => { e.preventDefault(); const i = $('chat-in'); Chat.send(i.value); i.value = ''; });
 $('chat-toggle').addEventListener('click', () => { Chat.setOpen(!Chat.open); if (Chat.open && !Chat.mobile()) $('chat-in').focus(); });
 $('chat-close').addEventListener('click', () => Chat.setOpen(false));
+// Handy: Chat am Griff oder Kopf nach unten ziehen, um ihn zu schließen
+(() => {
+  const box = $('chat'); let y0 = null, dy = 0;
+  const start = (e) => {
+    if (!Chat.mobile() || !Chat.open || e.target.closest('input, button, label')) return;
+    y0 = e.clientY; dy = 0; box.style.transition = 'none';
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+  };
+  const move = (e) => { if (y0 === null) return; dy = Math.max(0, e.clientY - y0); box.style.transform = `translateY(${dy}px)`; };
+  const end = () => {
+    if (y0 === null) return;
+    y0 = null; box.style.transition = 'transform .18s';
+    if (dy > Math.min(90, box.offsetHeight / 3)) {
+      box.style.transform = `translateY(${box.offsetHeight + 20}px)`;
+      setTimeout(() => { Chat.setOpen(false); box.style.transform = ''; box.style.transition = ''; }, 180);
+    } else box.style.transform = '';
+  };
+  for (const el of [box.querySelector('.chat-grip'), box.querySelector('.chat-head')]) {
+    el.addEventListener('pointerdown', start); el.addEventListener('pointermove', move);
+    el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
+  }
+})();
 $('chat-popup').checked = Chat.popups;
 $('chat-popup').addEventListener('change', (e) => {
   Chat.popups = e.target.checked;
