@@ -151,3 +151,30 @@ body.ingame #app { max-width: 1280px; }
 .inv-row button { flex: 0 0 auto; }
 .inv-pw { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; cursor: pointer; }
 .inv-pw input { width: auto; margin: 0; accent-color: var(--accent); }
+
+/* Handysteuerung Tasten/Wischen */
+.ctl-pick { display: flex; align-items: center; gap: 6px; margin: -4px 0 0; flex-wrap: wrap; }
+.ctl-lbl { color: var(--muted); font-size: .82rem; margin-right: auto; }
+.ctl-pick label { margin: 0; position: relative; }
+.ctl-pick input { position: absolute; opacity: 0; pointer-events: none; }
+.ctl-pick span { display: block; padding: 5px 12px; border: 1px solid var(--border); border-radius: 999px; font-size: .82rem; color: var(--text); cursor: pointer; }
+.ctl-pick input:checked + span { background: var(--accent2); border-color: var(--accent2); color: #061b24; font-weight: 600; }
+.ctl-pick input:focus-visible + span { outline: 2px solid var(--accent); }
+.ctl-note { font-size: .78rem; margin: 6px 0 10px; }
+body.ctl-wischen #stage { touch-action: none; }
+body.ctl-wischen #touch .pad { visibility: hidden; }
+
+/* Lobby kompakter */
+#screen-lobby { padding: 16px; }
+#screen-lobby h2 { font-size: 1.15rem; margin: 6px 0 8px; }
+#screen-lobby label { font-size: .82rem; margin-bottom: 9px; }
+#screen-lobby .note { font-size: .8rem; }
+.settings select { padding: 6px 10px; font-size: .88rem; }
+.mode-pick span { padding: 8px; font-size: .9rem; }
+#mode-note { margin: 4px 0 10px; }
+.mega-detail { padding: 6px 10px; }
+.mega-detail summary { font-size: .85rem; }
+.invite { margin: 10px 0 12px; padding: 10px; }
+.inv-row input { padding: 7px 10px; font-size: .8rem; }
+.inv-row button { padding: 7px 12px; font-size: .88rem; min-width: 0; }
+#screen-lobby .row button { padding: 9px 14px; font-size: .95rem; }
