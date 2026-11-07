@@ -153,14 +153,15 @@ body.ingame #app { max-width: 1280px; }
 .inv-pw input { width: auto; margin: 0; accent-color: var(--accent); }
 
 /* Handysteuerung Tasten/Wischen */
-.ctl-pick { display: flex; align-items: center; gap: 6px; margin: -4px 0 0; flex-wrap: wrap; }
+.ctl-pick { display: flex; align-items: center; gap: 6px; margin: 6px 0 0; flex-wrap: wrap; }
 .ctl-lbl { color: var(--muted); font-size: .82rem; margin-right: auto; }
+.ctl-lbl small { display: block; opacity: .75; font-size: .72rem; }
 .ctl-pick label { margin: 0; position: relative; }
 .ctl-pick input { position: absolute; opacity: 0; pointer-events: none; }
-.ctl-pick span { display: block; padding: 5px 12px; border: 1px solid var(--border); border-radius: 999px; font-size: .82rem; color: var(--text); cursor: pointer; }
+.ctl-pick label span { display: block; padding: 5px 12px; border: 1px solid var(--border); border-radius: 999px; font-size: .82rem; color: var(--text); cursor: pointer; }
 .ctl-pick input:checked + span { background: var(--accent2); border-color: var(--accent2); color: #061b24; font-weight: 600; }
 .ctl-pick input:focus-visible + span { outline: 2px solid var(--accent); }
-.ctl-note { font-size: .78rem; margin: 6px 0 10px; }
+.ctl-note { font-size: .78rem; margin: 4px 0 8px; }
 body.ctl-wischen #stage { touch-action: none; }
 body.ctl-wischen #touch .pad { visibility: hidden; }
 
