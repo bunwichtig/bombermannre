@@ -185,3 +185,27 @@ body.ctl-wischen #touch .pad { visibility: hidden; }
   max-width: calc(100% - 32px); padding: 10px 12px 10px 16px; border-radius: 12px; background: var(--panel); border: 1px solid var(--accent2); box-shadow: 0 10px 30px rgba(0,0,0,.5); font-size: .9rem; }
 .update-bar button { flex: none; min-width: 0; padding: 7px 12px; font-size: .88rem; }
 .ver { text-align: center; color: var(--muted); font-size: .72rem; opacity: .6; margin: 18px 0 0; }
+
+/* Leichtere, kompaktere Optik für Start und Lobby */
+h1 { font-size: 1.8rem; font-weight: 650; letter-spacing: .02em; }
+.sub { font-size: .9rem; }
+h2 { font-size: 1.1rem; font-weight: 600; }
+.panel { padding: 16px; border-radius: 10px; }
+label { font-size: .84rem; margin-bottom: 10px; }
+input { padding: 7px 10px; font-size: .92rem; border-radius: 7px; }
+button { padding: 8px 14px; font-size: .92rem; font-weight: 500; border-radius: 7px; min-width: 100px; }
+.msg { font-size: .88rem; }
+details { font-size: .86rem; }
+summary { font-weight: 500; }
+.tech-panel summary { font-weight: 500; }
+.rank-panel h2 { font-size: 1rem; }
+.ranking { font-size: .88rem; }
+.mode-pick span { font-weight: 500; }
+.mode-pick input:checked + span { font-weight: 600; }
+#lobby-players li { padding: 6px 0; font-size: .92rem; }
+.dot { width: 12px; height: 12px; }
+.mode-pick span { font-weight: 400; }
+.mode-pick input:checked + span { font-weight: 500; }
+.tech-panel { margin-top: 12px; }
+#lobby-hint { font-size: .86rem; }
+.settings select { font-weight: 400; }
