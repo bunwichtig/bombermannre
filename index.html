@@ -38,6 +38,48 @@
     <p class="note">Gespeichert in diesem Browser. Beim Beitreten gleichen alle Mitspieler ihre Ranglisten ab.</p>
   </section>
 
+  <!-- Technik-Erklärung -->
+  <section id="tech-start" class="panel tech-panel">
+    <details>
+      <summary>🛠️ Wie funktioniert das technisch?</summary>
+      <div class="tech">
+        <p><b>Kurz gesagt:</b> Es gibt keinen Spiele-Server. Die Seite selbst ist nur eine Handvoll Dateien (HTML, CSS, JavaScript), die GitHub Pages kostenlos ausliefert. Gespielt wird direkt zwischen euren Browsern.</p>
+
+        <h3>1. Die Seite laden</h3>
+        <p>Wer die Adresse öffnet, bekommt von GitHub Pages die statischen Dateien. Ab da läuft alles im eigenen Browser: Spielfeld zeichnen, Steuerung, Sound. Gebaut ist das ohne Framework, in reinem JavaScript. Gezeichnet wird auf einem <code>&lt;canvas&gt;</code>, die Geräusche erzeugt die Web Audio API live, es gibt also keine Sounddateien.</p>
+
+        <h3>2. Sich finden</h3>
+        <p>Browser können nicht einfach so miteinander reden, sie müssen sich erst „vorstellen“. Dafür nutzt das Spiel den kostenlosen Vermittlungsdienst von PeerJS. Wer einen Raum erstellt, meldet sich dort unter einer Kennung an, die aus dem Raumnamen gebildet wird (<code>funkenfeld-v1-raumname</code>). Wer beitritt, fragt nach genau dieser Kennung. Der Vermittler tauscht nur kurz die Verbindungsdaten aus und ist danach raus. Spielinhalte laufen nie über ihn.</p>
+
+        <h3>3. Direkt verbinden</h3>
+        <p>Danach steht eine direkte Verbindung über <b>WebRTC</b>, dieselbe Technik, die Videoanrufe im Browser nutzen. Damit das auch durch Heimrouter klappt, helfen sogenannte STUN-Server: Sie verraten jedem Browser, unter welcher öffentlichen Adresse er erreichbar ist. Lässt ein Netz gar keine direkte Verbindung zu (manche Firmen- oder Mobilfunknetze), kann ein TURN-Server die Daten weiterreichen. PeerJS bringt dafür eigene Standard-Server mit. Die Spieldaten sind in jedem Fall verschlüsselt (DTLS). Klappt es trotzdem nicht, hilft meist ein anderes Netz, zum Beispiel WLAN statt Mobilfunk.</p>
+
+        <h3>4. Wer rechnet?</h3>
+        <p>Der Browser, der den Raum erstellt hat, ist der <b>Gastgeber</b>. Nur er rechnet das Spiel, 60-mal pro Sekunde: Bewegungen, Bomben, Explosionen, Treffer. Die anderen schicken nur ihre Tastendrücke und bekommen 20-mal pro Sekunde den aktuellen Spielstand zurück, den ihr Browser dann zeichnet. Das nennt man ein <i>autoritatives Host-Modell</i>. So gibt es keine Streitfälle, wer wen zuerst erwischt hat. Deshalb muss der Tab des Gastgebers offen bleiben.</p>
+
+        <h3>5. Passwort</h3>
+        <p>Das Passwort wird nie im Klartext verschickt. Der Browser bildet daraus einen SHA-256-Hash (eine Art Fingerabdruck), und der Gastgeber vergleicht nur diese Fingerabdrücke. Das hält Fremde aus dem Raum. Ein Bankschloss ist es aber nicht, denn wer den Raumnamen kennt, kann es mit Raten versuchen. Wählt also ein Passwort, das man nicht sofort errät.</p>
+
+        <h3>6. Rangliste und Einstellungen</h3>
+        <p>Rangliste, Name und Lobby-Einstellungen liegen im <code>localStorage</code> deines Browsers, also nur auf deinem Gerät. Beim Beitreten tauschen die Browser ihre Ranglisten aus und führen sie zusammen. So haben alle denselben Stand, ganz ohne Datenbank.</p>
+
+        <h3>Zum Weiterlesen</h3>
+        <ul class="links">
+          <li><a href="https://github.com/bunwichtig/bombermannre" target="_blank" rel="noopener">Quelltext von Funkenfeld auf GitHub</a></li>
+          <li><a href="https://docs.github.com/de/pages/getting-started-with-github-pages/about-github-pages" target="_blank" rel="noopener">GitHub Pages: kostenloses Hosting statischer Seiten</a></li>
+          <li><a href="https://peerjs.com/" target="_blank" rel="noopener">PeerJS: Vermittlung und einfache WebRTC-Verbindungen</a></li>
+          <li><a href="https://developer.mozilla.org/de/docs/Web/API/WebRTC_API" target="_blank" rel="noopener">WebRTC bei MDN</a></li>
+          <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Protocols" target="_blank" rel="noopener">STUN, TURN und NAT: wie Browser sich durch Router finden (MDN)</a></li>
+          <li><a href="https://developer.mozilla.org/de/docs/Web/API/RTCDataChannel" target="_blank" rel="noopener">RTCDataChannel: der Datenkanal fürs Spiel (MDN)</a></li>
+          <li><a href="https://gabrielgambetta.com/client-server-game-architecture.html" target="_blank" rel="noopener">Gabriel Gambetta: autoritativer Host in Mehrspielerspielen (englisch)</a></li>
+          <li><a href="https://developer.mozilla.org/de/docs/Web/API/SubtleCrypto/digest" target="_blank" rel="noopener">SHA-256 im Browser: SubtleCrypto.digest (MDN)</a></li>
+          <li><a href="https://developer.mozilla.org/de/docs/Web/API/Canvas_API" target="_blank" rel="noopener">Canvas API (MDN)</a> und <a href="https://developer.mozilla.org/de/docs/Web/API/Web_Audio_API" target="_blank" rel="noopener">Web Audio API (MDN)</a></li>
+          <li><a href="https://developer.mozilla.org/de/docs/Web/API/Window/localStorage" target="_blank" rel="noopener">localStorage (MDN)</a></li>
+        </ul>
+      </div>
+    </details>
+  </section>
+
   <!-- Lobby -->
   <section id="screen-lobby" class="panel hidden">
     <h2>Raum <span id="lobby-room"></span></h2>

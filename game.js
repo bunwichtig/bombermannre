@@ -602,6 +602,7 @@ const S = {
 function show(screen) {
   for (const s of ['start', 'lobby', 'game']) $('screen-' + s).classList.toggle('hidden', s !== screen);
   $('rank-start').classList.toggle('hidden', screen !== 'start');
+  $('tech-start').classList.toggle('hidden', screen !== 'start');
   document.body.classList.toggle('ingame', screen === 'game');
   renderRanking();
 }
