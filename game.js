@@ -1362,6 +1362,56 @@ window.Funkenfeld = { Game, S, Sound };
 })();
 
 
+// Versteckte Hilfe: Wer 10-mal schnell auf dieselbe Stelle tippt (oder klickt), bekommt erklärt, was sie tut.
+const HELP = [
+  ['#touch-bomb', 'Bombe legen. Sie explodiert nach kurzer Zeit in alle vier Richtungen und sprengt Kisten. Am PC: Leertaste oder Enter.'],
+  ['#touch-det', 'Fernzünder: Mit dem 📡-Item gehen deine Bomben erst hoch, wenn du hier tippst (spätestens nach 20 Sekunden). Am PC: Strg.'],
+  ['.pad button', 'Steuerkreuz: Gedrückt halten, um in diese Richtung zu laufen. Am PC: Pfeiltasten oder WASD.'],
+  ['#stage', 'Das Spielfeld. Bei „Wischen“: in eine Richtung wischen und den Finger liegen lassen, um zu laufen; kurz tippen legt eine Bombe.'],
+  ['.ctl-pick label', 'Handysteuerung: „Tasten“ zeigt Steuerkreuz und Bombenknopf, bei „Wischen“ steuerst du direkt auf dem Spielfeld. Gilt nur für diesen Browser.'],
+  ['#btn-mute', 'Schaltet Ton und Effekte an oder aus.'],
+  ['#btn-quit, #btn-leave', 'Verlässt den Raum. Bist du der Gastgeber, endet das Spiel für alle.'],
+  ['#btn-again', 'Nur für den Gastgeber: zurück in die Lobby, die Siege dieser Sitzung starten wieder bei 0.'],
+  ['#btn-start', 'Startet das Spiel für alle im Raum. Das kann nur der Gastgeber.'],
+  ['#btn-host', 'Erstellt einen neuen Raum mit Name und Passwort. Dein Browser ist dann der Gastgeber, auf dem das Spiel läuft.'],
+  ['#btn-join', 'Tritt einem bestehenden Raum bei. Raumname und Passwort bekommst du vom Gastgeber.'],
+  ['#btn-copy', 'Kopiert den Einladungslink. Wer ihn öffnet, muss nur noch einen Namen eingeben.'],
+  ['#btn-share', 'Teilt den Einladungslink über die Teilen-Funktion deines Handys.'],
+  ['.mode-pick label', '„Klassisch“ nutzt feste Regeln. Bei „Individuell“ stellt der Gastgeber Items, Feld und Modus selbst ein.'],
+  ['#btn-update', 'Lädt die neueste Version von BombRe.'],
+  ['#chat-toggle', 'Öffnet den Chat. Die Zahl zeigt neue Nachrichten.'],
+  ['#chat-close', 'Schließt den Chat. Auf dem Handy kannst du ihn auch nach unten wegziehen.'],
+  ['.chat-pop', 'Schaltet die kurzen Einblendungen neuer Chatnachrichten an oder aus.'],
+  ['#chat-form button', 'Schickt deine Nachricht an alle im Raum.'],
+  ['#chat-log', 'Der Chatverlauf dieser Sitzung. Er wird nirgends gespeichert.'],
+  ['.ranking', 'Die Rangliste: Siege aus den Spielen in diesem Browser.'],
+  ['#hud', 'Alle Spieler mit ihren Siegen. Bei dir stehen zusätzlich deine Bomben 💣, Reichweite 🔥 und Tempo 👟.'],
+];
+(() => {
+  let target = null, count = 0, last = 0, bubble = null, hideT = 0;
+  const hide = () => { if (bubble) { bubble.remove(); bubble = null; } clearTimeout(hideT); };
+  const show = (el, text) => {
+    hide();
+    bubble = document.createElement('div'); bubble.className = 'help-bubble'; bubble.setAttribute('role', 'status');
+    bubble.textContent = text; document.body.appendChild(bubble);
+    const r = el.getBoundingClientRect(), b = bubble.getBoundingClientRect();
+    const left = Math.min(Math.max(8, r.left + r.width / 2 - b.width / 2), innerWidth - b.width - 8);
+    const top = r.top - b.height - 10 >= 8 ? r.top - b.height - 10 : Math.min(r.bottom + 10, innerHeight - b.height - 8);
+    bubble.style.left = left + 'px'; bubble.style.top = Math.max(8, top) + 'px';
+    hideT = setTimeout(hide, 7000);
+  };
+  window.addEventListener('pointerdown', (e) => {
+    if (bubble && !bubble.contains(e.target)) hide();
+    let el = null, text = '';
+    for (const [sel, t] of HELP) { const m = e.target.closest && e.target.closest(sel); if (m) { el = m; text = t; break; } }
+    const now = performance.now();
+    if (!el || el !== target || now - last > 450) { target = el; count = 0; }
+    last = now;
+    if (!el) return;
+    if (++count >= 10) { count = 0; show(el, text); }
+  }, { capture: true, passive: true });
+})();
+
 // Chat-Bedienung
 $('chat-form').addEventListener('submit', (e) => { e.preventDefault(); const i = $('chat-in'); Chat.send(i.value); i.value = ''; });
 $('chat-toggle').addEventListener('click', () => { Chat.setOpen(!Chat.open); if (Chat.open && !Chat.mobile()) $('chat-in').focus(); });
