@@ -142,3 +142,12 @@ body.ingame #app { max-width: 1280px; }
 .tech a { color: var(--accent); }
 .tech a:hover { text-decoration: underline; }
 .tech-panel details[open] summary { margin-bottom: 12px; }
+
+/* Einladungslink */
+.invite { margin: 14px 0 18px; padding: 14px; border: 1px dashed var(--border); border-radius: 12px; }
+.invite > label { margin-bottom: 6px; }
+.inv-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.inv-row input { flex: 1 1 220px; min-width: 0; font-size: .85rem; }
+.inv-row button { flex: 0 0 auto; }
+.inv-pw { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; cursor: pointer; }
+.inv-pw input { width: auto; margin: 0; accent-color: var(--accent); }
