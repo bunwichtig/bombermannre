@@ -623,7 +623,7 @@ async function hostRoom() {
   const f = readForm(); if (!f) return;
   setBusy(true); startMsg('Raum wird erstellt …');
   try {
-    S.role = 'host'; S.room = f.room; S.pwHash = await hashPw(f.room, f.pw);
+    S.role = 'host'; S.room = f.room; S.pw = f.pw; S.pwHash = await hashPw(f.room, f.pw);
     S.game = new Game();
     S.myId = 'host';
     S.game.addPlayer('host', f.name);
@@ -685,7 +685,7 @@ async function joinRoom() {
   setBusy(true); startMsg('Verbinde mit dem Raum …');
   try {
     const conn = await Net.join(f.room);
-    S.role = 'client'; S.room = f.room; S.conn = conn;
+    S.role = 'client'; S.room = f.room; S.pw = f.pw; S.conn = conn;
     const pw = await hashPw(f.room, f.pw);
     await new Promise((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error('Keine Antwort vom Gastgeber.')), 10000);
@@ -724,7 +724,41 @@ function onHostMessage(m) {
 function enterLobby() {
   show('lobby');
   $('lobby-room').textContent = '„' + S.room + '“';
+  updateInvite();
   if (S.role === 'host') broadcastLobby();
+}
+
+// ---------- Einladungslink ----------
+// Raum (und auf Wunsch Passwort) stehen hinter dem #. Dieser Teil der Adresse wird nie an einen Server geschickt.
+function inviteLink() {
+  const p = new URLSearchParams({ raum: S.room });
+  if ($('inv-pw').checked && S.pw) p.set('pw', S.pw);
+  return location.origin + location.pathname + (LOCAL ? '?local' : '') + '#' + p.toString();
+}
+function updateInvite() {
+  $('inv-link').value = inviteLink();
+  $('inv-msg').textContent = $('inv-pw').checked
+    ? 'Der Link enthält das Passwort. Schick ihn nur an deine Mitspieler. Wer ihn öffnet, gibt nur noch einen Namen ein.'
+    : 'Ohne Passwort im Link: Sag deinen Mitspielern das Passwort separat.';
+}
+async function copyInvite() {
+  const link = inviteLink(), btn = $('btn-copy');
+  let ok = false;
+  try { await navigator.clipboard.writeText(link); ok = true; } catch (e) {
+    const el = $('inv-link'); el.focus(); el.select();
+    try { ok = document.execCommand('copy'); } catch (e2) {}
+  }
+  btn.textContent = ok ? 'Kopiert ✓' : 'Bitte markieren & kopieren';
+  clearTimeout(copyInvite.t); copyInvite.t = setTimeout(() => { btn.textContent = 'Kopieren'; }, 2000);
+}
+$('inv-pw').addEventListener('change', updateInvite);
+$('btn-copy').addEventListener('click', copyInvite);
+$('inv-link').addEventListener('focus', (e) => e.target.select());
+if (navigator.share) {
+  $('btn-share').classList.remove('hidden');
+  $('btn-share').addEventListener('click', () => {
+    navigator.share({ title: 'Funkenfeld', text: 'Spiel mit mir Funkenfeld, Raum „' + S.room + '“:', url: inviteLink() }).catch(() => {});
+  });
 }
 function renderSettings(st, isHost) {
   st = cleanSettings(st);
@@ -768,7 +802,7 @@ function renderLobby(m) {
   $('btn-start').classList.toggle('hidden', !isHost);
   renderSettings(m.settings, isHost);
   $('lobby-hint').textContent = isHost
-    ? (m.players.length < 2 ? 'Warte auf Mitspieler. Gib ihnen Raumname und Passwort. (Allein starten geht zum Ausprobieren.)' : m.players.length + ' von ' + cleanSettings(m.settings).players + ' Spielern sind da.')
+    ? (m.players.length < 2 ? 'Warte auf Mitspieler. Schick ihnen den Einladungslink oben. (Allein starten geht zum Ausprobieren.)' : m.players.length + ' von ' + cleanSettings(m.settings).players + ' Spielern sind da.')
     : 'Warte, bis der Gastgeber das Spiel startet …';
 }
 
@@ -884,6 +918,19 @@ try {
   $('in-name').value = localStorage.getItem('ff-name') || '';
   $('in-room').value = localStorage.getItem('ff-room') || '';
 } catch (e) {}
+
+// Mit Einladungslink geöffnet? Raum und Passwort eintragen, dann den Link aus der Adresszeile nehmen.
+(function readInvite() {
+  const h = new URLSearchParams(location.hash.slice(1));
+  const room = slug(h.get('raum') || '');
+  if (!room) return;
+  $('in-room').value = room;
+  if (h.get('pw')) $('in-pass').value = h.get('pw');
+  history.replaceState(null, '', location.pathname + location.search);
+  startMsg('Du bist in den Raum „' + room + '“ eingeladen. Name eingeben und „Raum beitreten“ drücken.' + (h.get('pw') ? '' : ' Das Passwort bekommst du vom Gastgeber.'));
+  $('btn-join').classList.remove('secondary'); $('btn-host').classList.add('secondary');
+  setTimeout(() => $(h.get('pw') && !$('in-name').value ? 'in-name' : (h.get('pw') ? 'btn-join' : 'in-pass')).focus(), 0);
+})();
 
 $('settings').addEventListener('input', () => {
   if (S.role !== 'host' || S.game.phase !== 'lobby') return;

@@ -59,6 +59,7 @@
 
         <h3>5. Passwort</h3>
         <p>Das Passwort wird nie im Klartext verschickt. Der Browser bildet daraus einen SHA-256-Hash (eine Art Fingerabdruck), und der Gastgeber vergleicht nur diese Fingerabdrücke. Das hält Fremde aus dem Raum. Ein Bankschloss ist es aber nicht, denn wer den Raumnamen kennt, kann es mit Raten versuchen. Wählt also ein Passwort, das man nicht sofort errät.</p>
+        <p><b>Einladungslink:</b> Raum und Passwort stehen dort hinter dem <code>#</code>. Diesen Teil einer Adresse schickt der Browser nie an einen Server, auch nicht an GitHub. Nach dem Öffnen nimmt das Spiel ihn sofort wieder aus der Adresszeile.</p>
 
         <h3>6. Rangliste und Einstellungen</h3>
         <p>Rangliste, Name und Lobby-Einstellungen liegen im <code>localStorage</code> deines Browsers, also nur auf deinem Gerät. Beim Beitreten tauschen die Browser ihre Ranglisten aus und führen sie zusammen. So haben alle denselben Stand, ganz ohne Datenbank.</p>
@@ -84,6 +85,16 @@
   <section id="screen-lobby" class="panel hidden">
     <h2>Raum <span id="lobby-room"></span></h2>
     <ul id="lobby-players"></ul>
+    <div class="invite">
+      <label for="inv-link">Einladungslink zum Teilen</label>
+      <div class="inv-row">
+        <input id="inv-link" readonly>
+        <button id="btn-copy" type="button">Kopieren</button>
+        <button id="btn-share" type="button" class="secondary hidden">Teilen</button>
+      </div>
+      <label class="inv-pw"><input type="checkbox" id="inv-pw" checked> Passwort im Link mitschicken</label>
+      <p id="inv-msg" class="note" role="status">Wer den Link öffnet, muss nur noch einen Namen eingeben und beitreten.</p>
+    </div>
     <form id="settings" class="settings" onsubmit="return false">
       <div class="mode-pick" role="radiogroup" aria-label="Spielmodus">
         <label><input type="radio" name="mode" value="klassisch" checked><span>Klassisch</span></label>
