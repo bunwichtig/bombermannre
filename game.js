@@ -870,11 +870,12 @@ function runClientLoop() {
 
 // ---------- Eingabe ----------
 const held = []; // gedrückte Richtungen, letzte zuerst
+let swipeDir = null; // Richtung beim Wischen (Handysteuerung „Wischen“)
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const KEYMAP = { ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right' };
 function press(dir) { if (!held.includes(dir)) held.unshift(dir); updateDir(); }
 function release(dir) { const i = held.indexOf(dir); if (i >= 0) held.splice(i, 1); updateDir(); }
-function updateDir() { const d = held[0]; [S.input.dx, S.input.dy] = d ? DIRS[d] : [0, 0]; }
+function updateDir() { const d = held[0] || swipeDir; [S.input.dx, S.input.dy] = d ? DIRS[d] : [0, 0]; }
 function bomb() { S.input.bomb = (S.input.bomb + 1) % 1000; }
 function detonate() { S.input.det = (S.input.det + 1) % 1000; }
 function inGame() { return !$('screen-game').classList.contains('hidden'); }
@@ -895,6 +896,51 @@ document.querySelectorAll('#touch [data-dir]').forEach((btn) => {
 });
 $('touch-bomb').addEventListener('pointerdown', (e) => { e.preventDefault(); bomb(); });
 $('touch-det').addEventListener('pointerdown', (e) => { e.preventDefault(); detonate(); });
+
+// ---------- Handysteuerung: Tasten oder Wischen (gilt nur für dieses Gerät) ----------
+// Wischen: Finger aufs Spielfeld legen und in die gewünschte Richtung ziehen. Solange der Finger liegt,
+// läuft die Figur weiter. Kurz tippen legt eine Bombe.
+const SWIPE_MIN = 18, TAP_MAX = 12;
+let ctlMode = 'tasten';
+try { if (localStorage.getItem('ff-ctl') === 'wischen') ctlMode = 'wischen'; } catch (e) {}
+function setCtl(mode) {
+  ctlMode = mode === 'wischen' ? 'wischen' : 'tasten';
+  try { localStorage.setItem('ff-ctl', ctlMode); } catch (e) {}
+  document.querySelectorAll('input[name=ctl]').forEach((r) => { r.checked = r.value === ctlMode; });
+  document.body.classList.toggle('ctl-wischen', ctlMode === 'wischen');
+  $('ctl-note').textContent = ctlMode === 'wischen'
+    ? 'Auf dem Spielfeld in eine Richtung wischen und den Finger liegen lassen, um zu laufen. Kurz tippen legt eine Bombe.'
+    : 'Steuerkreuz und Bombenknopf unter dem Spielfeld.';
+  swipeDir = null; updateDir();
+}
+document.querySelectorAll('input[name=ctl]').forEach((r) => r.addEventListener('change', () => setCtl(r.value)));
+setCtl(ctlMode);
+(function swipe() {
+  const area = $('stage');
+  let sw = null;
+  area.addEventListener('pointerdown', (e) => {
+    if (ctlMode !== 'wischen' || sw) return;
+    e.preventDefault();
+    try { area.setPointerCapture(e.pointerId); } catch (err) {}
+    sw = { id: e.pointerId, x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, t: performance.now() };
+  });
+  area.addEventListener('pointermove', (e) => {
+    if (!sw || e.pointerId !== sw.id) return;
+    const dx = e.clientX - sw.x, dy = e.clientY - sw.y, len = Math.hypot(dx, dy);
+    if (len < SWIPE_MIN) return;
+    const d = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+    if (d !== swipeDir) { swipeDir = d; updateDir(); }
+    // Ankerpunkt mitziehen, damit ein Richtungswechsel sofort greift
+    sw.x = e.clientX - dx / len * SWIPE_MIN; sw.y = e.clientY - dy / len * SWIPE_MIN;
+  });
+  const end = (e) => {
+    if (!sw || e.pointerId !== sw.id) return;
+    const moved = Math.hypot(e.clientX - sw.x0, e.clientY - sw.y0);
+    if (moved < TAP_MAX && performance.now() - sw.t < 350 && inGame()) bomb();
+    sw = null; swipeDir = null; updateDir();
+  };
+  for (const ev of ['pointerup', 'pointercancel']) area.addEventListener(ev, end);
+})();
 
 $('btn-host').onclick = hostRoom;
 $('btn-join').onclick = joinRoom;

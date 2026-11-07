@@ -172,6 +172,12 @@
       </aside>
       <div class="game-main">
         <div id="hud"></div>
+        <div class="ctl-pick" role="radiogroup" aria-label="Handysteuerung">
+          <span class="ctl-lbl">📱 Steuerung <small>(gilt für diesen Browser)</small></span>
+          <label><input type="radio" name="ctl" value="tasten" checked><span>Tasten</span></label>
+          <label><input type="radio" name="ctl" value="wischen"><span>Wischen</span></label>
+        </div>
+        <p id="ctl-note" class="note ctl-note"></p>
         <div id="stage">
           <canvas id="cv" width="720" height="624"></canvas>
           <div id="overlay" class="hidden"></div>
