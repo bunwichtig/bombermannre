@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Funkenfeld</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app">
+  <header>
+    <h1>Funkenfeld</h1>
+    <p class="sub">Bomben legen, Kisten sprengen, als Letzter stehen bleiben. Für 2 bis 6 Spieler.</p>
+  </header>
+
+  <!-- Startbildschirm -->
+  <section id="screen-start" class="panel">
+    <label>Dein Name <input id="in-name" maxlength="12" autocomplete="nickname" placeholder="z. B. Dave"></label>
+    <label>Raumname <input id="in-room" maxlength="24" autocomplete="off" placeholder="z. B. kumpelrunde"></label>
+    <label>Passwort <input id="in-pass" type="password" maxlength="40" autocomplete="off"></label>
+    <div class="row">
+      <button id="btn-host">Raum erstellen</button>
+      <button id="btn-join" class="secondary">Raum beitreten</button>
+    </div>
+    <p id="start-msg" class="msg" role="status"></p>
+    <details>
+      <summary>So funktioniert es</summary>
+      <p>Einer erstellt einen Raum mit Name und Passwort. Die anderen geben denselben Raumnamen und dasselbe Passwort ein und treten bei. Der Browser des Erstellers ist der Gastgeber und muss offen bleiben.</p>
+      <p><b>Steuerung:</b> Pfeiltasten oder WASD zum Laufen, Leertaste oder Enter für eine Bombe, Strg zündet Fernzünder-Bomben. Auf dem Handy gibt es Tasten unter dem Spielfeld.</p>
+      <p><b>Power-ups:</b> 💣 eine Bombe mehr, 🔥 größere Explosion, 👟 schneller laufen, 🦶 Bomben wegkicken.</p>
+      <p><b>Mega-Items</b> (mit bunt leuchtendem Rahmen, Anteil in der Lobby einstellbar): 🌟 Megafeuer – maximale Explosion und eine Bombe mehr, 💥 Durchschlag – deine Explosionen gehen durch Kisten, 🛡️ Schild – übersteht einen Treffer, 👻 Geist – 10 Sekunden durch Kisten und Bomben laufen, 📡 Fernzünder – deine Bomben gehen erst hoch, wenn du Strg drückst (spätestens nach 20 Sekunden).</p>
+      <p><b>Regeln:</b> Wer von einer Explosion getroffen wird, ist für die Runde raus. Wer zuerst die eingestellte Zahl an Runden gewinnt (Standard 3), gewinnt das Spiel.</p>
+    </details>
+  </section>
+  <section id="rank-start" class="panel rank-panel">
+    <h2>🏆 Rangliste</h2>
+    <div class="ranking"></div>
+    <p class="note">Gespeichert in diesem Browser. Beim Beitreten gleichen alle Mitspieler ihre Ranglisten ab.</p>
+  </section>
+
+  <!-- Lobby -->
+  <section id="screen-lobby" class="panel hidden">
+    <h2>Raum <span id="lobby-room"></span></h2>
+    <ul id="lobby-players"></ul>
+    <form id="settings" class="settings" onsubmit="return false">
+      <div class="mode-pick" role="radiogroup" aria-label="Spielmodus">
+        <label><input type="radio" name="mode" value="klassisch" checked><span>Klassisch</span></label>
+        <label><input type="radio" name="mode" value="individuell"><span>Individuell</span></label>
+      </div>
+      <p id="mode-note" class="note"></p>
+      <label>Spieler im Raum (höchstens)
+        <select name="players">
+          <option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option>
+        </select>
+      </label>
+      <div id="set-indiv">
+      <label>Spielvariante
+        <select name="variant">
+          <option value="klassisch">Klassisch</option>
+          <option value="schrumpf">Schrumpfendes Feld (ab 1:00 fallen Blöcke)</option>
+        </select>
+      </label>
+      <label>Feldgröße
+        <select name="size">
+          <option value="klein">Klein (11 × 9)</option>
+          <option value="mittel">Mittel (15 × 13)</option>
+          <option value="gross">Groß (19 × 15)</option>
+          <option value="riesig">Riesig (23 × 17)</option>
+        </select>
+      </label>
+      <label>Power-up-Chance pro Kiste: <b id="set-items-val">30 %</b>
+        <input name="items" type="range" min="0" max="100" step="5" value="30">
+      </label>
+      <label>Anteil Mega-Items (🌟 💥 🛡️ 👻 📡) an den Power-ups: <b id="set-mega-val">10 %</b>
+        <input name="mega" type="range" min="0" max="100" step="5" value="10">
+      </label>
+      <details class="mega-detail">
+        <summary>Mega-Items einzeln einstellen</summary>
+        <p class="note">Gewichtung untereinander. 0 schaltet ein Item ab. Gleiche Werte bedeuten gleich häufig.</p>
+          <label>🌟 Megafeuer: <b id="w-mega"></b>
+            <input name="w_mega" type="range" min="0" max="100" step="5" value="100">
+          </label>
+          <label>💥 Durchschlag: <b id="w-pierce"></b>
+            <input name="w_pierce" type="range" min="0" max="100" step="5" value="100">
+          </label>
+          <label>🛡️ Schild: <b id="w-shield"></b>
+            <input name="w_shield" type="range" min="0" max="100" step="5" value="100">
+          </label>
+          <label>👻 Geist: <b id="w-ghost"></b>
+            <input name="w_ghost" type="range" min="0" max="100" step="5" value="100">
+          </label>
+          <label>📡 Fernzünder: <b id="w-remote"></b>
+            <input name="w_remote" type="range" min="0" max="100" step="5" value="100">
+          </label>
+      </details>
+      <label>Rundensiege zum Gewinnen
+        <select name="wins">
+          <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+        </select>
+      </label>
+      </div>
+      <p id="settings-note" class="note"></p>
+    </form>
+    <p id="lobby-hint" class="msg"></p>
+    <div class="row">
+      <button id="btn-start" class="hidden">Spiel starten</button>
+      <button id="btn-leave" class="secondary">Verlassen</button>
+    </div>
+    <h2 class="rank-title">🏆 Rangliste</h2>
+    <div class="ranking"></div>
+  </section>
+
+  <!-- Spiel -->
+  <section id="screen-game" class="hidden">
+    <div class="game-layout">
+      <aside class="panel rank-side">
+        <h2>🏆 Rangliste</h2>
+        <div class="ranking"></div>
+      </aside>
+      <div class="game-main">
+        <div id="hud"></div>
+        <div id="stage">
+          <canvas id="cv" width="720" height="624"></canvas>
+          <div id="overlay" class="hidden"></div>
+        </div>
+        <div id="touch">
+          <div class="pad">
+            <button data-dir="up">▲</button>
+            <button data-dir="left">◀</button>
+            <button data-dir="right">▶</button>
+            <button data-dir="down">▼</button>
+          </div>
+          <div class="touch-actions">
+            <button id="touch-det" title="Fernzünder">📡</button>
+            <button id="touch-bomb">💣</button>
+          </div>
+        </div>
+        <div class="row center">
+          <button id="btn-again" class="hidden">Neues Spiel</button>
+          <button id="btn-mute" class="secondary"></button>
+          <button id="btn-quit" class="secondary">Verlassen</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
