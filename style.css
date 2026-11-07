@@ -131,3 +131,14 @@ body.ingame #app { max-width: 1280px; }
   .rank-side { order: 2; position: static; }
   #stage { max-width: 100%; }
 }
+
+/* Technik-Erklärung */
+.tech-panel details { margin-top: 0; }
+.tech-panel summary { font-weight: 600; }
+.tech h3 { margin: 18px 0 6px; font-size: 1rem; color: var(--accent2); }
+.tech p { margin: 0 0 10px; line-height: 1.55; }
+.tech code { background: rgba(255,255,255,.07); padding: 1px 5px; border-radius: 4px; font-size: .88em; overflow-wrap: anywhere; }
+.tech .links { margin: 6px 0 0; padding-left: 20px; line-height: 1.7; }
+.tech a { color: var(--accent); }
+.tech a:hover { text-decoration: underline; }
+.tech-panel details[open] summary { margin-bottom: 12px; }
