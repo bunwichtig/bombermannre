@@ -249,3 +249,8 @@ h1 .re { color: var(--accent2); }
   .chat-grip { display: block; width: 44px; height: 5px; margin: -4px auto 2px; border-radius: 3px; background: var(--muted); opacity: .6; }
   .chat-grip, .chat-head { touch-action: none; }
 }
+
+/* Verlassen ganz unten */
+.leave-row { margin-top: 16px; }
+/* Die Wahl Tasten/Wischen gibt es nur auf Touch-Geräten; am PC steuert die Tastatur */
+@media not (pointer: coarse) { .ctl-pick, .ctl-note { display: none; } }
