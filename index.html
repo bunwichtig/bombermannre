@@ -83,6 +83,7 @@
 
   <!-- Lobby -->
   <section id="screen-lobby" class="panel hidden">
+    <div id="chat-slot-lobby"></div>
     <h2>Raum <span id="lobby-room"></span></h2>
     <ul id="lobby-players"></ul>
     <div class="invite">
@@ -164,6 +165,7 @@
       <aside class="panel rank-side">
         <h2>🏆 Rangliste</h2>
         <div class="ranking"></div>
+        <div id="chat-slot-game"></div>
       </aside>
       <div class="game-main">
         <div id="hud"></div>
@@ -202,6 +204,21 @@
     <button id="btn-update" type="button">Jetzt laden</button>
   </div>
   <p class="ver">Version __VERSION__</p>
+  <!-- Chat: wird je nach Bildschirm in die Lobby oder neben das Spielfeld gehängt -->
+  <div id="chat" class="chat hidden">
+    <div class="chat-head">
+      <b>💬 Chat</b>
+      <label class="chat-pop" title="Neue Nachrichten kurz über dem Spielfeld einblenden"><input type="checkbox" id="chat-popup" checked> Popups</label>
+      <button id="chat-close" type="button" class="secondary chat-x" aria-label="Chat schließen">✕</button>
+    </div>
+    <ul id="chat-log" class="chat-log" aria-live="polite"></ul>
+    <form id="chat-form" class="chat-form" autocomplete="off">
+      <input id="chat-in" maxlength="200" placeholder="Nachricht …" enterkeyhint="send">
+      <button type="submit">Senden</button>
+    </form>
+  </div>
+  <button id="chat-toggle" type="button" class="chat-toggle hidden" aria-label="Chat öffnen">💬<span id="chat-badge" class="chat-badge hidden">0</span></button>
+  <div id="chat-toasts" class="chat-toasts" aria-hidden="true"></div>
 </main>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="game.js?v=__VERSION__"></script>
