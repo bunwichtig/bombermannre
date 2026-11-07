@@ -615,7 +615,9 @@ const Chat = {
   log: [], unread: 0, open: false,
   popups: (() => { try { return localStorage.getItem('ff-chat-popup') !== 'aus'; } catch (e) { return true; } })(),
   mobile: () => matchMedia('(max-width: 860px)').matches,
-  visible() { return !$('chat').classList.contains('hidden') && (!Chat.mobile() || Chat.open); },
+  screen: '', inView: true,
+  // Auf dem Handy steht der Chat immer oben; "sichtbar" heißt dort: gerade nicht weggescrollt.
+  visible() { return !$('chat').classList.contains('hidden') && (!Chat.mobile() || Chat.inView); },
   line(m) {
     const mine = m.id === S.myId;
     return `<li class="${mine ? 'mine' : ''}"><span class="dot" style="background:${esc(m.color || '#888')}"></span><b>${esc(m.name)}</b> ${esc(m.text)}</li>`;
@@ -633,7 +635,7 @@ const Chat = {
     if (m.id === S.myId) return;
     Sound.play && Sound.play('chat');
     if (!Chat.visible()) { Chat.unread++; Chat.badge(); }
-    if (Chat.popups && (inGame() || !Chat.visible())) Chat.toast(m);
+    if (Chat.popups && (!Chat.visible() || (inGame() && !Chat.mobile()))) Chat.toast(m);
   },
   toast(m) {
     const box = $('chat-toasts'), t = document.createElement('div');
@@ -644,16 +646,23 @@ const Chat = {
     setTimeout(() => t.remove(), 4600);
   },
   badge() { const b = $('chat-badge'); b.textContent = Chat.unread > 9 ? '9+' : Chat.unread; b.classList.toggle('hidden', !Chat.unread); },
-  setOpen(v) {
-    Chat.open = v; document.body.classList.toggle('chat-open', v);
-    if (v) { Chat.unread = 0; Chat.badge(); Chat.render(); }
+  setBig(v) {
+    $('chat').classList.toggle('big', v);
+    const x = $('chat-close'); x.textContent = v ? '▴' : '▾'; x.setAttribute('aria-label', v ? 'Chat kleiner' : 'Chat größer');
+    Chat.render();
+  },
+  setInView(v) {
+    Chat.inView = v;
+    document.body.classList.toggle('chat-away', !v);
+    if (v) { Chat.unread = 0; Chat.badge(); }
   },
   place(screen) {
-    const on = screen === 'lobby' || screen === 'game';
+    if (screen !== undefined) Chat.screen = screen;
+    const on = Chat.screen === 'lobby' || Chat.screen === 'game';
     $('chat').classList.toggle('hidden', !on);
     $('chat-toggle').classList.toggle('hidden', !on);
-    if (!on) { Chat.setOpen(false); return; }
-    $('chat-slot-' + screen).appendChild($('chat'));
+    if (!on) { Chat.setBig(false); return; }
+    $('chat-slot-' + (Chat.mobile() ? 'top' : Chat.screen)).appendChild($('chat'));
     Chat.render();
   },
   send(text) {
@@ -1354,8 +1363,10 @@ window.Funkenfeld = { Game, S, Sound };
 
 // Chat-Bedienung
 $('chat-form').addEventListener('submit', (e) => { e.preventDefault(); const i = $('chat-in'); Chat.send(i.value); i.value = ''; });
-$('chat-toggle').addEventListener('click', () => { Chat.setOpen(!Chat.open); if (Chat.open && !Chat.mobile()) $('chat-in').focus(); });
-$('chat-close').addEventListener('click', () => Chat.setOpen(false));
+$('chat-toggle').addEventListener('click', () => { $('chat').scrollIntoView({ block: 'start', behavior: 'smooth' }); $('chat-in').focus({ preventScroll: true }); });
+$('chat-close').addEventListener('click', () => Chat.setBig(!$('chat').classList.contains('big')));
+matchMedia('(max-width: 860px)').addEventListener('change', () => Chat.place());
+if ('IntersectionObserver' in window) new IntersectionObserver((es) => Chat.setInView(es[es.length - 1].isIntersecting), { threshold: 0.3 }).observe($('chat'));
 $('chat-popup').checked = Chat.popups;
 $('chat-popup').addEventListener('change', (e) => {
   Chat.popups = e.target.checked;
