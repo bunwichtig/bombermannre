@@ -235,14 +235,17 @@ h1 .re { color: var(--accent2); }
 .chat-toast .dot { display: inline-block; width: 9px; height: 9px; margin-right: 6px; }
 .chat-toast.out { opacity: 0; transform: translateY(-6px); }
 
+.chat-grip { display: none; }
 /* Handy und schmale Fenster: Chat über einen Knopf einblenden */
 @media (max-width: 860px) {
   .chat-toggle:not(.hidden) { display: grid; place-items: center; position: fixed; right: 14px; bottom: 14px; z-index: 25; width: 52px; height: 52px; min-width: 0; padding: 0;
     border-radius: 50%; font-size: 1.4rem; background: var(--panel); border: 1px solid var(--accent2); box-shadow: 0 8px 22px rgba(0,0,0,.5); }
   .chat:not(.hidden) { display: none; }
-  body.chat-open .chat:not(.hidden) { display: flex; position: fixed; left: 8px; right: 8px; bottom: 8px; z-index: 26; margin: 0; padding: 12px;
+  body.chat-open #chat:not(.hidden) { display: flex; position: fixed; left: 8px; right: 8px; bottom: 8px; z-index: 26; margin: 0; padding: 12px;
     background: var(--panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 -8px 30px rgba(0,0,0,.55); }
   body.chat-open .chat-log { max-height: 40vh; }
   body.chat-open .chat-toggle { display: none; }
   .chat-x { display: block; }
+  .chat-grip { display: block; width: 44px; height: 5px; margin: -4px auto 2px; border-radius: 3px; background: var(--muted); opacity: .6; }
+  .chat-grip, .chat-head { touch-action: none; }
 }
