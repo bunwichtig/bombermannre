@@ -600,12 +600,76 @@ const S = {
   lastSent: '',
 };
 
+// ---------- Chat ----------
+// Nachrichten laufen über den Gastgeber: Mitspieler schicken {t:'chat', text}, der Gastgeber setzt Name und
+// Farbe des Absenders dazu und verteilt die Nachricht an alle. Gespeichert wird nichts, nur die letzten
+// Nachrichten der laufenden Sitzung (neue Mitspieler bekommen die letzten 20).
+function hostChat(p, text) {
+  text = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+  if (!text) return;
+  const m = { t: 'chat', id: p.id, name: p.name, color: p.color, text, ts: Date.now() };
+  for (const c of S.conns.values()) c.send(m);
+  Chat.add(m);
+}
+const Chat = {
+  log: [], unread: 0, open: false,
+  popups: (() => { try { return localStorage.getItem('ff-chat-popup') !== 'aus'; } catch (e) { return true; } })(),
+  mobile: () => matchMedia('(max-width: 860px)').matches,
+  visible() { return !$('chat').classList.contains('hidden') && (!Chat.mobile() || Chat.open); },
+  line(m) {
+    const mine = m.id === S.myId;
+    return `<li class="${mine ? 'mine' : ''}"><span class="dot" style="background:${esc(m.color || '#888')}"></span><b>${esc(m.name)}</b> ${esc(m.text)}</li>`;
+  },
+  render() {
+    const el = $('chat-log');
+    el.innerHTML = Chat.log.length ? Chat.log.map(Chat.line).join('') : '<li class="muted">Noch keine Nachrichten. Sag Hallo!</li>';
+    el.scrollTop = el.scrollHeight;
+  },
+  reset(list) { Chat.log = Array.isArray(list) ? list.slice(-50) : []; Chat.unread = 0; Chat.badge(); Chat.render(); },
+  add(m) {
+    if (!m || !m.text) return;
+    Chat.log.push(m); if (Chat.log.length > 50) Chat.log.shift();
+    Chat.render();
+    if (m.id === S.myId) return;
+    Sound.play && Sound.play('chat');
+    if (!Chat.visible()) { Chat.unread++; Chat.badge(); }
+    if (Chat.popups && (inGame() || !Chat.visible())) Chat.toast(m);
+  },
+  toast(m) {
+    const box = $('chat-toasts'), t = document.createElement('div');
+    t.className = 'chat-toast'; t.innerHTML = `<span class="dot" style="background:${esc(m.color || '#888')}"></span><b>${esc(m.name)}</b> ${esc(m.text)}`;
+    box.appendChild(t);
+    while (box.children.length > 3) box.firstChild.remove();
+    setTimeout(() => t.classList.add('out'), 4000);
+    setTimeout(() => t.remove(), 4600);
+  },
+  badge() { const b = $('chat-badge'); b.textContent = Chat.unread > 9 ? '9+' : Chat.unread; b.classList.toggle('hidden', !Chat.unread); },
+  setOpen(v) {
+    Chat.open = v; document.body.classList.toggle('chat-open', v);
+    if (v) { Chat.unread = 0; Chat.badge(); Chat.render(); }
+  },
+  place(screen) {
+    const on = screen === 'lobby' || screen === 'game';
+    $('chat').classList.toggle('hidden', !on);
+    $('chat-toggle').classList.toggle('hidden', !on);
+    if (!on) { Chat.setOpen(false); return; }
+    $('chat-slot-' + screen).appendChild($('chat'));
+    Chat.render();
+  },
+  send(text) {
+    text = String(text || '').trim(); if (!text) return;
+    if (S.role === 'host') { const p = S.game.players.find((q) => q.id === 'host'); if (p) hostChat(p, text); }
+    else if (S.conn) S.conn.send({ t: 'chat', text: text.slice(0, 200) });
+  },
+};
+
 // ---------- Oberfläche ----------
 function show(screen) {
   for (const s of ['start', 'lobby', 'game']) $('screen-' + s).classList.toggle('hidden', s !== screen);
   $('rank-start').classList.toggle('hidden', screen !== 'start');
   $('tech-start').classList.toggle('hidden', screen !== 'start');
   document.body.classList.toggle('ingame', screen === 'game');
+  Chat.place(screen);
   renderRanking();
 }
 function startMsg(text, err) { const m = $('start-msg'); m.textContent = text; m.classList.toggle('err', !!err); }
@@ -656,9 +720,15 @@ function onClientConnect(conn) {
       g.addPlayer(pid, String(m.name || 'Spieler').slice(0, 12));
       S.conns.set(pid, conn);
       conn.send({ t: 'welcome', id: pid });
+      conn.send({ t: 'chatlog', list: Chat.log.slice(-20) });
       if (mergeMatches(m.matches)) { const msg = { t: 'matches', list: loadMatches() }; for (const c of S.conns.values()) c.send(msg); }
       else conn.send({ t: 'matches', list: loadMatches() });
       broadcastLobby();
+      return;
+    }
+    if (m.t === 'chat') {
+      const p = S.game.players.find((q) => q.id === pid);
+      if (p) hostChat(p, m.text);
       return;
     }
     if (m.t === 'input') {
@@ -717,6 +787,10 @@ function onHostMessage(m) {
     if (m.phase === 'lobby' && !$('screen-game').classList.contains('hidden')) enterLobby();
   } else if (m.t === 'matches') {
     mergeMatches(m.list); renderRanking();
+  } else if (m.t === 'chat') {
+    Chat.add(m);
+  } else if (m.t === 'chatlog') {
+    Chat.reset(m.list);
   } else if (m.t === 'state') {
     S.view = m;
     if (m.phase !== 'lobby' && $('screen-game').classList.contains('hidden')) show('game');
@@ -817,6 +891,7 @@ function leave(reason) {
   }
   Object.assign(S, { role: null, game: null, hostNet: null, conns: new Map(), conn: null, view: null, myId: null });
   S.disp.clear();
+  Chat.reset([]);
   show('start');
   startMsg(reason || '', !!reason);
 }
@@ -883,7 +958,7 @@ function detonate() { S.input.det = (S.input.det + 1) % 1000; }
 function inGame() { return !$('screen-game').classList.contains('hidden'); }
 
 addEventListener('keydown', (e) => {
-  if (!inGame()) return;
+  if (!inGame() || (e.target && e.target.closest && e.target.closest('input, textarea'))) return;
   const d = KEYMAP[e.code];
   if (d) { press(d); e.preventDefault(); }
   else if ((e.code === 'Space' || e.code === 'Enter') && !e.repeat) { bomb(); e.preventDefault(); }
@@ -1023,6 +1098,7 @@ const Sound = (() => {
     death: () => { tone('sawtooth', 500, 60, 0.6, 0.3); },
     start: () => { [523, 659, 784].forEach((f, i) => tone('square', f, 0, 0.12, 0.18, i * 0.12)); },
     round: () => { [784, 659, 784, 1047].forEach((f, i) => tone('triangle', f, 0, 0.15, 0.3, i * 0.13)); },
+    chat: () => { tone('sine', 1175, 0, 0.12, 0.08, 0); tone('sine', 1568, 0, 0.12, 0.08, 0.07); },
     draw: () => { [392, 330].forEach((f, i) => tone('triangle', f, 0, 0.25, 0.3, i * 0.2)); },
     win: () => { [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone('square', f, 0, i === 5 ? 0.5 : 0.14, 0.2, i * 0.14)); },
     mega: () => { [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => tone('triangle', f, 0, 0.12, 0.3, i * 0.05)); tone('sine', 1568, 2093, 0.4, 0.15, 0.3); },
@@ -1275,4 +1351,15 @@ window.Funkenfeld = { Game, S, Sound };
   setInterval(() => { if (!inGame()) check(); }, 120000);
 })();
 
+
+// Chat-Bedienung
+$('chat-form').addEventListener('submit', (e) => { e.preventDefault(); const i = $('chat-in'); Chat.send(i.value); i.value = ''; });
+$('chat-toggle').addEventListener('click', () => { Chat.setOpen(!Chat.open); if (Chat.open && !Chat.mobile()) $('chat-in').focus(); });
+$('chat-close').addEventListener('click', () => Chat.setOpen(false));
+$('chat-popup').checked = Chat.popups;
+$('chat-popup').addEventListener('change', (e) => {
+  Chat.popups = e.target.checked;
+  try { localStorage.setItem('ff-chat-popup', Chat.popups ? 'an' : 'aus'); } catch (err) {}
+});
+Chat.render();
 })();
