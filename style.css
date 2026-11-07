@@ -254,3 +254,6 @@ h1 .re { color: var(--accent2); }
 .leave-row { margin-top: 16px; }
 /* Die Wahl Tasten/Wischen gibt es nur auf Touch-Geräten; am PC steuert die Tastatur */
 @media not (pointer: coarse) { .ctl-pick, .ctl-note { display: none; } }
+
+/* Versteckte Hilfe nach 10 schnellen Tipps */
+.help-bubble { position: fixed; z-index: 40; max-width: min(320px, calc(100vw - 16px)); padding: 10px 13px; border-radius: 10px; background: rgba(31,34,48,.97); border: 1px solid var(--accent); color: var(--text); font-size: .88rem; line-height: 1.4; box-shadow: 0 10px 28px rgba(0,0,0,.5); }
