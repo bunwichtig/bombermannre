@@ -1,4 +1,4 @@
-/* Funkenfeld – Bomben-Arena für 2 bis 6 Spieler im Browser.
+/* BombRe (früher Funkenfeld) – Bomben-Arena für 2 bis 6 Spieler im Browser.
  *
  * Netzwerk: Peer-to-Peer über WebRTC (PeerJS). Der Browser, der den Raum erstellt,
  * ist der Gastgeber: Er prüft das Passwort, berechnet das Spiel und schickt den
@@ -759,7 +759,7 @@ $('inv-link').addEventListener('focus', (e) => e.target.select());
 if (navigator.share) {
   $('btn-share').classList.remove('hidden');
   $('btn-share').addEventListener('click', () => {
-    navigator.share({ title: 'Funkenfeld', text: 'Spiel mit mir Funkenfeld, Raum „' + S.room + '“:', url: inviteLink() }).catch(() => {});
+    navigator.share({ title: 'BombRe', text: 'Spiel mit mir BombRe, Raum „' + S.room + '“:', url: inviteLink() }).catch(() => {});
   });
 }
 function renderSettings(st, isHost) {

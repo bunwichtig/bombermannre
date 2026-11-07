@@ -209,3 +209,4 @@ summary { font-weight: 500; }
 .tech-panel { margin-top: 12px; }
 #lobby-hint { font-size: .86rem; }
 .settings select { font-weight: 400; }
+h1 .re { color: var(--accent2); }
