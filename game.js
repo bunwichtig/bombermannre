@@ -504,8 +504,9 @@ class Game {
     if (!over) return;
     if (this.clock <= 0 && alive.length > 1) { this.msg = 'Zeit abgelaufen – unentschieden'; }
     else if (alive.length === 1 && !solo) {
+      // Kein Matchende mehr: Es wird endlos weitergespielt, jeder Rundensieg zählt in der Rangliste.
       const w = alive[0]; w.score++;
-      if (w.score >= this.rules.wins) { this.phase = 'matchEnd'; this.msg = w.name + ' gewinnt das Spiel! 🏆'; return; }
+      this.winSeq = (this.winSeq || 0) + 1; this.lastWinner = w.name;
       this.msg = w.name + ' gewinnt die Runde';
     } else this.msg = solo ? 'Erwischt!' : 'Unentschieden';
     this.phase = 'roundEnd';
@@ -528,7 +529,8 @@ class Game {
 }
 
 // ---------- Rangliste ----------
-// Jedes beendete Spiel wird als Eintrag gespeichert (im Browser, localStorage).
+// Jeder Rundensieg wird als Eintrag gespeichert (im Browser, localStorage). Ältere Einträge stammen
+// noch aus ganzen Spielen; dort zählen die gewonnenen Runden (score) genauso als Siege.
 // Beim Beitreten tauschen Gastgeber und Mitspieler ihre Listen aus, so haben alle denselben Stand.
 const RANK_KEY = 'ff-matches', RANK_MAX = 300;
 function loadMatches() {
@@ -561,27 +563,27 @@ function ranking() {
   const by = new Map();
   for (const m of loadMatches()) for (const p of m.players) {
     const key = p.name.trim().toLowerCase();
-    const r = by.get(key) || { name: p.name, games: 0, wins: 0, rounds: 0, last: 0 };
-    r.games++; r.rounds += p.score; if (p.name === m.winner) r.wins++;
+    const r = by.get(key) || { name: p.name, wins: 0, last: 0 };
+    r.wins += p.score;
     if (m.date >= r.last) { r.last = m.date; r.name = p.name; }
     by.set(key, r);
   }
-  return [...by.values()].sort((a, b) => b.wins - a.wins || (b.wins / b.games) - (a.wins / a.games) || b.rounds - a.rounds || a.name.localeCompare(b.name));
+  return [...by.values()].sort((a, b) => b.wins - a.wins || b.last - a.last || a.name.localeCompare(b.name));
 }
 function renderRanking() {
   const rows = ranking();
   const html = rows.length
-    ? '<table><thead><tr><th>#</th><th>Name</th><th title="Gewonnene Spiele">Siege</th><th title="Gespielte Spiele">Spiele</th><th title="Gewonnene Runden">Runden</th></tr></thead><tbody>' +
-      rows.slice(0, 20).map((r, i) => `<tr><td>${['🥇', '🥈', '🥉'][i] || i + 1}</td><td>${esc(r.name)}</td><td>${r.wins}</td><td>${r.games}</td><td>${r.rounds}</td></tr>`).join('') +
+    ? '<table><thead><tr><th>#</th><th>Name</th><th title="Gewonnene Runden insgesamt">Siege</th></tr></thead><tbody>' +
+      rows.slice(0, 20).map((r, i) => `<tr><td>${['🥇', '🥈', '🥉'][i] || i + 1}</td><td>${esc(r.name)}</td><td>${r.wins}</td></tr>`).join('') +
       '</tbody></table>'
-    : '<p class="muted">Noch keine Spiele. Nach dem ersten ganzen Spiel steht hier, wer vorne liegt.</p>';
+    : '<p class="muted">Noch keine Siege. Nach der ersten gewonnenen Runde steht hier, wer vorne liegt.</p>';
   document.querySelectorAll('.ranking').forEach((el) => { el.innerHTML = html; });
 }
-function recordMatch(g) {
-  const winner = g.players.find((p) => p.score >= g.rules.wins);
-  if (!winner) return;
+function recordWin(g) {
+  const winner = g.players.find((p) => p.name === g.lastWinner);
+  if (!winner || g.players.length < 2) return;
   const m = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), date: Date.now(),
-    players: g.players.map((p) => ({ name: p.name, score: p.score })), winner: winner.name };
+    players: g.players.map((p) => ({ name: p.name, score: p === winner ? 1 : 0 })), winner: winner.name };
   mergeMatches([m]);
   renderRanking();
   const msg = { t: 'matches', list: loadMatches() };
@@ -854,8 +856,8 @@ function renderSettings(st, isHost) {
   for (const o of form.players.options) o.hidden = classic && +o.value < 4;
   const [cw, ch] = CLASSIC_SIZE[st.players] || CLASSIC_SIZE[4];
   $('mode-note').textContent = classic
-    ? `Klassische Regeln: 3 Rundensiege, 30 % Power-ups, keine Mega-Items. Feld ${cw} × ${ch}.`
-    : 'Alles selbst einstellen: Variante, Feldgröße, Power-ups, Mega-Items und Rundensiege.';
+    ? `Klassische Regeln: 30 % Power-ups, keine Mega-Items. Feld ${cw} × ${ch}. Es wird endlos weitergespielt.`
+    : 'Alles selbst einstellen: Variante, Feldgröße, Power-ups und Mega-Items. Es wird endlos weitergespielt.';
   $('set-items-val').textContent = st.items + ' %';
   $('set-mega-val').textContent = st.mega + ' %';
   // Wie viel Prozent aller Power-ups ergibt das je Mega-Item?
@@ -868,7 +870,7 @@ function renderSettings(st, isHost) {
 }
 function readSettings() {
   const f = $('settings');
-  return cleanSettings({ mode: f.querySelector('input[name=mode]:checked').value, players: f.players.value, variant: f.variant.value, size: f.size.value, items: f.items.value, wins: f.wins.value, mega: f.mega.value,
+  return cleanSettings({ mode: f.querySelector('input[name=mode]:checked').value, players: f.players.value, variant: f.variant.value, size: f.size.value, items: f.items.value, wins: WIN_ROUNDS, mega: f.mega.value,
     megaW: Object.fromEntries(MEGA_LIST.map((t) => [t, f['w_' + t].value])) });
 }
 function loadSavedSettings() {
@@ -911,7 +913,7 @@ function runHostLoop() {
     const me = g.players.find((p) => p.id === 'host'); if (me) me.input = { ...S.input };
     while (acc >= TICK) {
       g.step(TICK); acc -= TICK;
-      if (g.phase === 'matchEnd' && !g.recorded) { g.recorded = true; recordMatch(g); }
+      if ((g.winSeq || 0) !== (g.recordedSeq || 0)) { g.recordedSeq = g.winSeq; recordWin(g); }
       if (++n % SEND_EVERY === 0) {
         const snap = g.snapshot();
         for (const c of S.conns.values()) c.send(snap);
@@ -1195,14 +1197,14 @@ function draw(v, isHost) {
 
   // Anzeige oben
   const hud = v.players.map((p) =>
-    `<span class="hud-p${p.alive || v.phase === 'lobby' ? '' : ' dead'}"><span class="dot" style="background:${p.color}"></span>${esc(p.name)} <b>${'★'.repeat(p.score)}${'☆'.repeat(Math.max(0, (v.wins || WIN_ROUNDS) - p.score))}</b>` +
+    `<span class="hud-p${p.alive || v.phase === 'lobby' ? '' : ' dead'}"><span class="dot" style="background:${p.color}"></span>${esc(p.name)} <b title="Siege in dieser Sitzung">🏆 ${p.score}</b>` +
     (p.id === S.myId ? ` <small>💣${p.bombs} 🔥${p.range} 👟${p.speed}${p.kick ? ' 🦶' : ''}${p.pierce ? ' 💥' : ''}${p.shield ? ' 🛡️' : ''}${p.ghost ? ' 👻' + p.ghost : ''}${p.remote ? ' 📡 Strg' : ''}</small>` : '') + '</span>').join('') +
     `<span class="hud-t">⏱ ${Math.floor(v.clock / 60)}:${String(v.clock % 60).padStart(2, '0')}</span>`;
   if (hud !== lastHud) { $('hud').innerHTML = hud; lastHud = hud; }
   const ov = $('overlay');
   ov.classList.toggle('hidden', !v.msg);
   if (v.msg && ov.textContent !== v.msg) ov.textContent = v.msg;
-  $('btn-again').classList.toggle('hidden', !(isHost && v.phase === 'matchEnd'));
+  $('btn-again').classList.toggle('hidden', !isHost);
 }
 
 function drawWall(px, py) {
