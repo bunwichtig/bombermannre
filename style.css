@@ -252,3 +252,5 @@ h1 .re { color: var(--accent2); }
 
 /* Verlassen ganz unten */
 .leave-row { margin-top: 16px; }
+/* Die Wahl Tasten/Wischen gibt es nur auf Touch-Geräten; am PC steuert die Tastatur */
+@media not (pointer: coarse) { .ctl-pick, .ctl-note { display: none; } }

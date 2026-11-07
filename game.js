@@ -988,7 +988,8 @@ let ctlMode = 'tasten';
 // schon beim bloßen Laden geschrieben und taugt deshalb nicht als echte Wahl).
 try {
   const saved = localStorage.getItem('ff-steuerung');
-  if (saved === 'wischen' || (!saved && matchMedia('(pointer: coarse)').matches)) ctlMode = 'wischen';
+  const touch = matchMedia('(pointer: coarse)').matches;
+  if (touch && (saved === 'wischen' || !saved)) ctlMode = 'wischen';
 } catch (e) {}
 function setCtl(mode, save) {
   ctlMode = mode === 'wischen' ? 'wischen' : 'tasten';
