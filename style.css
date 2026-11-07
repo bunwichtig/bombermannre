@@ -248,4 +248,7 @@ h1 .re { color: var(--accent2); }
   .chat-x { display: block; }
   .chat-grip { display: block; width: 44px; height: 5px; margin: -4px auto 2px; border-radius: 3px; background: var(--muted); opacity: .6; }
   .chat-grip, .chat-head { touch-action: none; }
+  /* Im Spiel sitzt der Chat-Knopf oben rechts, damit er nicht über dem Bombenknopf liegt */
+  body.ingame .chat-toggle:not(.hidden) { top: 12px; bottom: auto; width: 46px; height: 46px; font-size: 1.25rem; }
+  body.ingame .chat-toasts { left: 12px; right: 70px; width: auto; transform: none; }
 }
