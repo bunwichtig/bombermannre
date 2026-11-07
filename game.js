@@ -983,10 +983,16 @@ $('touch-det').addEventListener('pointerdown', (e) => { e.preventDefault(); deto
 // läuft die Figur weiter. Kurz tippen legt eine Bombe.
 const SWIPE_MIN = 18, TAP_MAX = 12;
 let ctlMode = 'tasten';
-try { if (localStorage.getItem('ff-ctl') === 'wischen') ctlMode = 'wischen'; } catch (e) {}
-function setCtl(mode) {
+// Ohne eigene Wahl: auf Handys (Touch-Bildschirm) ist Wischen voreingestellt, sonst Tasten.
+// Gespeichert wird nur, was jemand selbst anklickt (Schlüssel ff-steuerung; das alte ff-ctl wurde
+// schon beim bloßen Laden geschrieben und taugt deshalb nicht als echte Wahl).
+try {
+  const saved = localStorage.getItem('ff-steuerung');
+  if (saved === 'wischen' || (!saved && matchMedia('(pointer: coarse)').matches)) ctlMode = 'wischen';
+} catch (e) {}
+function setCtl(mode, save) {
   ctlMode = mode === 'wischen' ? 'wischen' : 'tasten';
-  try { localStorage.setItem('ff-ctl', ctlMode); } catch (e) {}
+  if (save) try { localStorage.setItem('ff-steuerung', ctlMode); } catch (e) {}
   document.querySelectorAll('input[name=ctl]').forEach((r) => { r.checked = r.value === ctlMode; });
   document.body.classList.toggle('ctl-wischen', ctlMode === 'wischen');
   $('ctl-note').textContent = ctlMode === 'wischen'
@@ -994,7 +1000,7 @@ function setCtl(mode) {
     : 'Steuerkreuz und Bombenknopf unter dem Spielfeld.';
   swipeDir = null; updateDir();
 }
-document.querySelectorAll('input[name=ctl]').forEach((r) => r.addEventListener('change', () => setCtl(r.value)));
+document.querySelectorAll('input[name=ctl]').forEach((r) => r.addEventListener('change', () => setCtl(r.value, true)));
 setCtl(ctlMode);
 (function swipe() {
   const area = $('stage');
