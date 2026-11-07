@@ -1,4 +1,4 @@
-# Funkenfeld
+# BombRe
 
 Eine Bomben-Arena für 2 bis 6 Spieler direkt im Browser. Eigene Grafik, klassische Regeln.
 
