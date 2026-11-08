@@ -351,8 +351,8 @@ h1 .re { color: var(--accent2); }
   /* Kein Scrollen im Spiel: die Seite ist genau so hoch wie der sichtbare Bildschirm, damit die
      Adresszeile nicht ein- und ausfährt; das Spielfeld schrumpft, wenn der Platz knapp ist. */
   html:has(body.ingame), body.ingame { height: 100%; overflow: hidden; overscroll-behavior: none; }
-  body.ingame #app { height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; padding-top: 10px; }
-  body.ingame #stage { max-width: min(100%, calc((100vh - 270px) * var(--ar, 1.15))); max-width: min(100%, calc((100dvh - 270px) * var(--ar, 1.15))); justify-self: center; width: 100%; }
+  body.ingame #app { height: 100vh; height: 100svh; height: var(--app-h, 100svh); min-height: 0; overflow: hidden; padding-top: 10px; }
+  body.ingame #stage { max-width: min(100%, calc((100vh - 270px) * var(--ar, 1.15))); max-width: min(100%, calc((var(--app-h, 100svh) - 270px) * var(--ar, 1.15))); justify-self: center; width: 100%; }
   /* Wischen überall: die ganze Fläche gehört dem Spiel, nur Chatverlauf und Rangliste scrollen in sich */
   body.ingame.ctl-wischen { touch-action: none; }
   body.ingame .chat-log, body.ingame #rank-fold .ranking { touch-action: pan-y; }
