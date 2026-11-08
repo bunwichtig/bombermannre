@@ -688,10 +688,22 @@ function arrangeMobile(game, entering) {
     $('btn-quit').title = 'Verlassen'; $('btn-quit').setAttribute('aria-label', 'Verlassen');
   }
   if (!on) $('rank-fold').open = true;
-  else if (entering) { $('ctl-help').open = false; $('rank-fold').open = false; scrollTo(0, 0); }
+  else if (entering) { $('ctl-help').open = false; $('rank-fold').open = false; scrollTo(0, 0); fitHeightSoon(); }
   mobileArranged = on;
 }
 matchMedia('(max-width: 860px)').addEventListener('change', () => arrangeMobile(inGame()));
+// Echte sichtbare Höhe (Android meldet 100dvh nach dem Laden oft falsch, bis die App gewechselt wird)
+function fitHeight() {
+  const h = Math.round((window.visualViewport && visualViewport.height) || innerHeight);
+  if (h > 0) document.documentElement.style.setProperty('--app-h', h + 'px');
+}
+function fitHeightSoon() { fitHeight(); requestAnimationFrame(fitHeight); setTimeout(fitHeight, 150); setTimeout(fitHeight, 500); setTimeout(fitHeight, 1200); }
+addEventListener('resize', fitHeight);
+addEventListener('orientationchange', fitHeightSoon);
+addEventListener('pageshow', fitHeightSoon);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) fitHeightSoon(); });
+if (window.visualViewport) visualViewport.addEventListener('resize', fitHeight);
+fitHeight();
 
 // ---------- Oberfläche ----------
 function show(screen) {
