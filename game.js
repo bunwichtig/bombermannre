@@ -670,15 +670,19 @@ const Chat = {
 
 // Handy im Spiel: Tasten/Wischen und Chat-Knopf wandern oben rechts in die Titelzeile,
 // Steuerungs-Erklärung und Rangliste starten eingeklappt. Am PC bleibt alles, wie es ist.
-let mobileArranged = false, toggleHome = null;
+let mobileArranged = false, homes = null;
 function arrangeMobile(game, entering) {
   const on = game && Chat.mobile(), tools = $('head-tools'), pick = document.querySelector('.ctl-pick');
   if (on && !mobileArranged) {
-    toggleHome = toggleHome || { parent: $('chat-toggle').parentNode, next: $('chat-toggle').nextSibling };
-    tools.append(pick, $('chat-toggle'));
+    const home = (el) => ({ el, parent: el.parentNode, next: el.nextSibling });
+    homes = homes || [home($('chat-toggle')), home($('btn-mute')), home($('btn-quit'))];
+    // Verlassen als ✕ ganz links vor dem Titel, Ton als Symbol links neben der Steuerungswahl
+    document.querySelector('header').prepend($('btn-quit'));
+    tools.append($('btn-mute'), pick, $('chat-toggle'));
     $('ctl-help').open = false; $('rank-fold').open = false;
   } else if (!on && mobileArranged) {
-    $('ctl-help').before(pick); toggleHome.parent.insertBefore($('chat-toggle'), toggleHome.next);
+    $('ctl-help').before(pick);
+    for (const h of homes) h.parent.insertBefore(h.el, h.next);
   }
   if (!on) $('rank-fold').open = true;
   else if (entering) { $('ctl-help').open = false; $('rank-fold').open = false; scrollTo(0, 0); }
@@ -1194,7 +1198,10 @@ const Sound = (() => {
 })();
 // Browser erlauben Ton erst nach einer Nutzeraktion
 for (const ev of ['pointerdown', 'keydown']) addEventListener(ev, () => Sound.init(), { capture: true });
-function updateMuteBtn() { $('btn-mute').textContent = Sound.muted ? '🔇 Ton aus' : '🔊 Ton an'; }
+function updateMuteBtn() {
+  $('btn-mute').innerHTML = Sound.muted ? '🔇<span class="lbl"> Ton aus</span>' : '🔊<span class="lbl"> Ton an</span>';
+  $('btn-mute').setAttribute('aria-label', Sound.muted ? 'Ton ist aus, einschalten' : 'Ton ist an, ausschalten');
+}
 $('btn-mute').onclick = () => { Sound.toggle(); updateMuteBtn(); $('btn-mute').blur(); };
 updateMuteBtn();
 
