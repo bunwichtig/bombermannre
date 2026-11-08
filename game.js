@@ -683,7 +683,7 @@ function readForm() {
   const name = $('in-name').value.trim() || 'Spieler';
   const roomRaw = $('in-room').value.trim();
   const pw = $('in-pass').value;
-  try { localStorage.setItem('ff-name', name); localStorage.setItem('ff-room', roomRaw); } catch (e) {}
+  try { localStorage.setItem('ff-name', name); } catch (e) {}
   if (!slug(roomRaw)) { startMsg('Bitte einen Raumnamen eingeben.', true); return null; }
   if (!pw) { startMsg('Bitte ein Passwort eingeben.', true); return null; }
   return { name: name.slice(0, 12), room: slug(roomRaw), pw };
@@ -1049,10 +1049,49 @@ $('btn-again').onclick = () => {
   broadcastLobby();
   enterLobby();
 };
-try {
-  $('in-name').value = localStorage.getItem('ff-name') || '';
-  $('in-room').value = localStorage.getItem('ff-room') || '';
-} catch (e) {}
+// ---------- Vorschläge fürs Startmenü (Name, Raum, Passwort – alles bleibt änderbar) ----------
+// 100 der beliebtesten Vornamen in Deutschland und 100 Beispiel-Raumnamen
+const NAMES = [
+  'Emilia', 'Emma', 'Sophia', 'Hannah', 'Mia', 'Lina', 'Mila', 'Ella', 'Leni', 'Clara',
+  'Lea', 'Marie', 'Frieda', 'Mathilda', 'Lia', 'Emily', 'Ida', 'Lena', 'Anna', 'Luisa',
+  'Laura', 'Lotta', 'Johanna', 'Leonie', 'Charlotte', 'Amelie', 'Sophie', 'Malia', 'Lara', 'Nele',
+  'Paula', 'Mira', 'Elena', 'Thea', 'Greta', 'Helena', 'Juna', 'Melina', 'Alina', 'Maja',
+  'Pia', 'Zoe', 'Nora', 'Romy', 'Liv', 'Carla', 'Marlene', 'Isabella', 'Julia', 'Sarah',
+  'Noah', 'Matteo', 'Leon', 'Luca', 'Paul', 'Elias', 'Finn', 'Ben', 'Emil', 'Felix',
+  'Henry', 'Theo', 'Jonas', 'Luis', 'Anton', 'Liam', 'Fiete', 'Leo', 'Louis', 'Max',
+  'Milan', 'Jakob', 'Oskar', 'Moritz', 'Mats', 'Julian', 'Karl', 'Jonah', 'Elia', 'Alexander',
+  'David', 'Lukas', 'Samuel', 'Tim', 'Niklas', 'Jan', 'Tom', 'Mika', 'Levi', 'Malte',
+  'Ole', 'Emilio', 'Philipp', 'Hannes', 'Vincent', 'Johann', 'Lio', 'Linus', 'Benjamin', 'Leonard',
+];
+const ROOMS = [
+  'Freitagsrunde', 'Kumpelgruppe', 'Wanderer', 'Arbeitskollegen', 'Stammtisch', 'Spieleabend', 'Zockerbande', 'WG-Runde', 'Familienrunde', 'Nachbarschaft',
+  'Sonntagsclub', 'Kegelclub', 'Laufgruppe', 'Feierabendrunde', 'Kaffeeklatsch', 'Studienfreunde', 'Klassentreffen', 'Fussballfreunde', 'Radlergruppe', 'Bergfreunde',
+  'Campingfreunde', 'Grillmeister', 'Doppelkopfrunde', 'Skatrunde', 'Mittagspause', 'Teamabend', 'Projektgruppe', 'Lerngruppe', 'Elternabend', 'Gartenfreunde',
+  'Nachtschicht', 'Kneipenrunde', 'Bandprobe', 'Chorfreunde', 'Vereinsheim', 'Turnhalle', 'Dorfjugend', 'Abiturjahrgang', 'Ersties', 'Semesterrunde',
+  'Kochclub', 'Weinrunde', 'Bierfreunde', 'Brettspielclub', 'Quizrunde', 'Kinoabend', 'Serienjunkies', 'Couchpotatoes', 'Nachteulen', 'Morgenmuffel',
+  'Sofahelden', 'Pausenhof', 'Hinterhofbande', 'Strandclique', 'Seglerclub', 'Angelfreunde', 'Kletterclub', 'Skifahrer', 'Almrunde', 'Ferienlager',
+  'Urlaubsclique', 'Roadtrip', 'Junggesellen', 'Trauzeugen', 'Cousinen', 'Geschwister', 'Schwiegerfamilie', 'Oma und Opa', 'Patenkinder', 'Krabbelgruppe',
+  'Kitaeltern', 'Fahrgemeinschaft', 'Pendlerzug', 'Homeoffice', 'Kaffeeecke', 'Montagsmeeting', 'IT-Abteilung', 'Azubis', 'Werkstatt', 'Lagerhalle',
+  'Praxisteam', 'Lehrerzimmer', 'Feuerwehr', 'Rettungswache', 'Tanzgruppe', 'Yogakurs', 'Fitnessstudio', 'Joggingtreff', 'Tennisclub', 'Handballteam',
+  'Mopedfreunde', 'Oldtimerclub', 'Gamerclan', 'Lanparty', 'Zeltlager', 'Pfadfinder', 'Nachbarn von oben', 'Hausgemeinschaft', 'Balkonrunde', 'Mitternachtsclub',
+];
+function rndInt(n) {
+  try { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; } catch (e) { return Math.floor(Math.random() * n); }
+}
+const randomName = () => NAMES[rndInt(NAMES.length)];
+const randomRoom = () => ROOMS[rndInt(ROOMS.length)];
+// Drei Ziffern, ein Punkt, drei Buchstaben, z. B. „482.kfm“
+function randomPassword() {
+  let d = '', l = '';
+  for (let i = 0; i < 3; i++) { d += rndInt(10); l += 'abcdefghijklmnopqrstuvwxyz'[rndInt(26)]; }
+  return d + '.' + l;
+}
+
+let savedName = '';
+try { savedName = localStorage.getItem('ff-name') || ''; } catch (e) {}
+$('in-name').value = savedName || randomName();
+$('in-room').value = randomRoom();
+$('in-pass').value = randomPassword();
 
 // Mit Einladungslink geöffnet? Raum und Passwort eintragen, dann den Link aus der Adresszeile nehmen.
 (function readInvite() {
@@ -1060,7 +1099,7 @@ try {
   const room = slug(h.get('raum') || '');
   if (!room) return;
   $('in-room').value = room;
-  if (h.get('pw')) $('in-pass').value = h.get('pw');
+  $('in-pass').value = h.get('pw') || '';
   history.replaceState(null, '', location.pathname + location.search);
   startMsg('Du bist in den Raum „' + room + '“ eingeladen. Name eingeben und „Raum beitreten“ drücken.' + (h.get('pw') ? '' : ' Das Passwort bekommst du vom Gastgeber.'));
   $('btn-join').classList.remove('secondary'); $('btn-host').classList.add('secondary');
