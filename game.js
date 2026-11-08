@@ -1033,7 +1033,7 @@ setCtl(ctlMode);
 // Wischen funktioniert im Spiel überall auf dem Bildschirm, außer auf Knöpfen, Eingabefeldern, dem Chat
 // und der Rangliste. Tippen legt keine Bombe mehr, dafür gibt es den 💣-Knopf.
 (function swipe() {
-  const SKIP = 'button, input, select, textarea, label, summary, a, .chat, .chat-toggle, .help-bubble, .game-side, .leave-row, .update-bar';
+  const SKIP = 'button, input, select, textarea, label, summary, a, .chat, .chat-toggle, .help-bubble, .ranking, .leave-row, .update-bar';
   let sw = null;
   document.addEventListener('pointerdown', (e) => {
     if (ctlMode !== 'wischen' || sw || !inGame() || e.pointerType === 'mouse') return;
