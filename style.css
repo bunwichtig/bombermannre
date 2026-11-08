@@ -100,6 +100,7 @@ canvas { display: block; width: 100%; height: auto; border-radius: 8px; image-re
 .settings select:disabled, .settings input:disabled { opacity: .7; }
 .settings b { color: var(--text); }
 .touch-actions { display: flex; align-items: center; gap: 12px; }
+body.mode-klassisch #touch-det { display: none !important; }
 #touch-det { flex: none; width: 64px; height: 64px; min-width: 0; border-radius: 50%; font-size: 1.6rem; touch-action: none; background: var(--panel); border: 1px solid var(--border); }
 .mega-detail { margin: -4px 0 12px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; }
 .mega-detail summary { color: var(--text); font-size: .92rem; }

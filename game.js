@@ -890,6 +890,8 @@ function renderSettings(st, isHost) {
   }
   const classic = st.mode === 'klassisch';
   $('set-indiv').classList.toggle('hidden', classic);
+  // Zünder-Knopf nur im Modus Individuell (bei Klassisch gibt es keine Mega-Items)
+  document.body.classList.toggle('mode-klassisch', classic);
   for (const o of form.players.options) o.hidden = classic && +o.value < 4;
   const [cw, ch] = CLASSIC_SIZE[st.players] || CLASSIC_SIZE[4];
   $('mode-note').textContent = classic
