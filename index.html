@@ -18,6 +18,7 @@
     <label>Dein Name <input id="in-name" maxlength="12" autocomplete="nickname" placeholder="z. B. Dave"></label>
     <label>Raumname <input id="in-room" maxlength="24" autocomplete="off" placeholder="z. B. kumpelrunde"></label>
     <label>Passwort <input id="in-pass" type="text" maxlength="40" autocomplete="off" spellcheck="false"></label>
+    <button id="btn-random" type="button" class="secondary dice-btn" title="Neuen Namen, Raum und Passwort würfeln">🎲 Zufällig</button>
     <div class="row">
       <button id="btn-host">Raum erstellen</button>
       <button id="btn-join" class="secondary">Raum beitreten</button>
@@ -62,7 +63,7 @@
         <p><b>Einladungslink:</b> Raum und Passwort stehen dort hinter dem <code>#</code>. Diesen Teil einer Adresse schickt der Browser nie an einen Server, auch nicht an GitHub. Nach dem Öffnen nimmt das Spiel ihn sofort wieder aus der Adresszeile.</p>
 
         <h3>6. Rangliste und Einstellungen</h3>
-        <p>Rangliste, Name und Lobby-Einstellungen liegen im <code>localStorage</code> deines Browsers, also nur auf deinem Gerät. Beim Beitreten tauschen die Browser ihre Ranglisten aus und führen sie zusammen. So haben alle denselben Stand, ganz ohne Datenbank.</p>
+        <p>Rangliste, Name, zuletzt benutzter Raum mit Passwort und Lobby-Einstellungen liegen im <code>localStorage</code> deines Browsers, also nur auf deinem Gerät. Beim Beitreten tauschen die Browser ihre Ranglisten aus und führen sie zusammen. So haben alle denselben Stand, ganz ohne Datenbank.</p>
 
         <h3>Zum Weiterlesen</h3>
         <ul class="links">

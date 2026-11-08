@@ -683,7 +683,7 @@ function readForm() {
   const name = $('in-name').value.trim() || 'Spieler';
   const roomRaw = $('in-room').value.trim();
   const pw = $('in-pass').value;
-  try { localStorage.setItem('ff-name', name); } catch (e) {}
+  try { localStorage.setItem('ff-name', name); localStorage.setItem('ff-room', roomRaw); localStorage.setItem('ff-pass', pw); } catch (e) {}
   if (!slug(roomRaw)) { startMsg('Bitte einen Raumnamen eingeben.', true); return null; }
   if (!pw) { startMsg('Bitte ein Passwort eingeben.', true); return null; }
   return { name: name.slice(0, 12), room: slug(roomRaw), pw };
@@ -1087,11 +1087,16 @@ function randomPassword() {
   return d + '.' + l;
 }
 
-let savedName = '';
-try { savedName = localStorage.getItem('ff-name') || ''; } catch (e) {}
-$('in-name').value = savedName || randomName();
-$('in-room').value = randomRoom();
-$('in-pass').value = randomPassword();
+// Zuletzt benutzte Werte wieder eintragen, sonst (beim ersten Besuch) Zufallsvorschläge.
+const saved = (k) => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
+$('in-name').value = saved('ff-name') || randomName();
+$('in-room').value = saved('ff-room') || randomRoom();
+$('in-pass').value = saved('ff-pass') || randomPassword();
+$('btn-random').onclick = () => {
+  $('in-name').value = randomName();
+  $('in-room').value = randomRoom();
+  $('in-pass').value = randomPassword();
+};
 
 // Mit Einladungslink geöffnet? Raum und Passwort eintragen, dann den Link aus der Adresszeile nehmen.
 (function readInvite() {
