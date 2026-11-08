@@ -100,6 +100,7 @@ canvas { display: block; width: 100%; height: auto; border-radius: 8px; image-re
 .settings select:disabled, .settings input:disabled { opacity: .7; }
 .settings b { color: var(--text); }
 .touch-actions { display: flex; align-items: center; gap: 12px; }
+body.mode-klassisch #touch-det { display: none !important; }
 #touch-det { flex: none; width: 64px; height: 64px; min-width: 0; border-radius: 50%; font-size: 1.6rem; touch-action: none; background: var(--panel); border: 1px solid var(--border); }
 .mega-detail { margin: -4px 0 12px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; }
 .mega-detail summary { color: var(--text); font-size: .92rem; }
@@ -366,4 +367,9 @@ h1 .re { color: var(--accent2); }
   body.ingame .game-side { align-self: end; }
   body.ingame .ver { text-align: right; margin: 4px 2px 0; }
   body.ingame .ctl-help { display: none; }
+  /* Rangliste und Version fest am unteren Bildschirmrand: so bleiben sie sichtbar, auch wenn Android
+     die Höhe nach dem Spielstart falsch meldet (vorher erst nach einem App-Wechsel zu sehen) */
+  body.ingame #rank-fold { position: fixed; left: var(--rank-x, 16px); right: var(--rank-x, 16px); bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); z-index: 12; margin: 0; }
+  body.ingame .ver { position: fixed; right: calc(var(--rank-x, 16px) + 2px); bottom: calc(env(safe-area-inset-bottom, 0px) + 4px); margin: 0; z-index: 12; }
+  body.ingame #app { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 84px); }
 }
