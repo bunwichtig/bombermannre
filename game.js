@@ -668,6 +668,24 @@ const Chat = {
   },
 };
 
+// Handy im Spiel: Tasten/Wischen und Chat-Knopf wandern oben rechts in die Titelzeile,
+// Steuerungs-Erklärung und Rangliste starten eingeklappt. Am PC bleibt alles, wie es ist.
+let mobileArranged = false, toggleHome = null;
+function arrangeMobile(game, entering) {
+  const on = game && Chat.mobile(), tools = $('head-tools'), pick = document.querySelector('.ctl-pick');
+  if (on && !mobileArranged) {
+    toggleHome = toggleHome || { parent: $('chat-toggle').parentNode, next: $('chat-toggle').nextSibling };
+    tools.append(pick, $('chat-toggle'));
+    $('ctl-help').open = false; $('rank-fold').open = false;
+  } else if (!on && mobileArranged) {
+    $('ctl-help').before(pick); toggleHome.parent.insertBefore($('chat-toggle'), toggleHome.next);
+  }
+  if (!on) $('rank-fold').open = true;
+  else if (entering) { $('ctl-help').open = false; $('rank-fold').open = false; scrollTo(0, 0); }
+  mobileArranged = on;
+}
+matchMedia('(max-width: 860px)').addEventListener('change', () => arrangeMobile(inGame()));
+
 // ---------- Oberfläche ----------
 function show(screen) {
   for (const s of ['start', 'lobby', 'game']) $('screen-' + s).classList.toggle('hidden', s !== screen);
@@ -675,6 +693,7 @@ function show(screen) {
   $('tech-start').classList.toggle('hidden', screen !== 'start');
   document.body.classList.toggle('ingame', screen === 'game');
   Chat.place(screen);
+  arrangeMobile(screen === 'game', true);
   renderRanking();
 }
 function startMsg(text, err) { const m = $('start-msg'); m.textContent = text; m.classList.toggle('err', !!err); }
@@ -980,9 +999,9 @@ $('touch-bomb').addEventListener('pointerdown', (e) => { e.preventDefault(); bom
 $('touch-det').addEventListener('pointerdown', (e) => { e.preventDefault(); detonate(); });
 
 // ---------- Handysteuerung: Tasten oder Wischen (gilt nur für dieses Gerät) ----------
-// Wischen: Finger aufs Spielfeld legen und in die gewünschte Richtung ziehen. Solange der Finger liegt,
-// läuft die Figur weiter. Kurz tippen legt eine Bombe.
-const SWIPE_MIN = 18, TAP_MAX = 12;
+// Wischen: Finger auflegen und in die gewünschte Richtung ziehen. Solange der Finger liegt,
+// läuft die Figur weiter.
+const SWIPE_MIN = 18;
 let ctlMode = 'tasten';
 // Ohne eigene Wahl: auf Handys (Touch-Bildschirm) ist Wischen voreingestellt, sonst Tasten.
 // Gespeichert wird nur, was jemand selbst anklickt (Schlüssel ff-steuerung; das alte ff-ctl wurde
@@ -998,22 +1017,25 @@ function setCtl(mode, save) {
   document.querySelectorAll('input[name=ctl]').forEach((r) => { r.checked = r.value === ctlMode; });
   document.body.classList.toggle('ctl-wischen', ctlMode === 'wischen');
   $('ctl-note').textContent = ctlMode === 'wischen'
-    ? 'Auf dem Spielfeld in eine Richtung wischen und den Finger liegen lassen, um zu laufen. Kurz tippen legt eine Bombe.'
+    ? 'Irgendwo auf dem Bildschirm in eine Richtung wischen und den Finger liegen lassen, um zu laufen. Bomben legst du mit dem 💣-Knopf.'
     : 'Steuerkreuz und Bombenknopf unter dem Spielfeld.';
   swipeDir = null; updateDir();
 }
 document.querySelectorAll('input[name=ctl]').forEach((r) => r.addEventListener('change', () => setCtl(r.value, true)));
 setCtl(ctlMode);
+// Wischen funktioniert im Spiel überall auf dem Bildschirm, außer auf Knöpfen, Eingabefeldern, dem Chat
+// und der Rangliste. Tippen legt keine Bombe mehr, dafür gibt es den 💣-Knopf.
 (function swipe() {
-  const area = $('stage');
+  const SKIP = 'button, input, select, textarea, label, summary, a, .chat, .chat-toggle, .help-bubble, .game-side, .leave-row, .update-bar';
   let sw = null;
-  area.addEventListener('pointerdown', (e) => {
-    if (ctlMode !== 'wischen' || sw) return;
+  document.addEventListener('pointerdown', (e) => {
+    if (ctlMode !== 'wischen' || sw || !inGame() || e.pointerType === 'mouse') return;
+    if (e.target.closest(SKIP)) return;
     e.preventDefault();
-    try { area.setPointerCapture(e.pointerId); } catch (err) {}
-    sw = { id: e.pointerId, x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, t: performance.now() };
+    try { e.target.setPointerCapture(e.pointerId); } catch (err) {}
+    sw = { id: e.pointerId, x: e.clientX, y: e.clientY };
   });
-  area.addEventListener('pointermove', (e) => {
+  document.addEventListener('pointermove', (e) => {
     if (!sw || e.pointerId !== sw.id) return;
     const dx = e.clientX - sw.x, dy = e.clientY - sw.y, len = Math.hypot(dx, dy);
     if (len < SWIPE_MIN) return;
@@ -1024,11 +1046,9 @@ setCtl(ctlMode);
   });
   const end = (e) => {
     if (!sw || e.pointerId !== sw.id) return;
-    const moved = Math.hypot(e.clientX - sw.x0, e.clientY - sw.y0);
-    if (moved < TAP_MAX && performance.now() - sw.t < 350 && inGame()) bomb();
     sw = null; swipeDir = null; updateDir();
   };
-  for (const ev of ['pointerup', 'pointercancel']) area.addEventListener(ev, end);
+  for (const ev of ['pointerup', 'pointercancel']) document.addEventListener(ev, end);
 })();
 
 $('btn-host').onclick = hostRoom;
@@ -1411,8 +1431,8 @@ const HELP = [
   ['#touch-bomb', 'Bombe legen. Sie explodiert nach kurzer Zeit in alle vier Richtungen und sprengt Kisten. Am PC: Leertaste oder Enter.'],
   ['#touch-det', 'Fernzünder: Mit dem 📡-Item gehen deine Bomben erst hoch, wenn du hier tippst (spätestens nach 20 Sekunden). Am PC: Strg.'],
   ['.pad button', 'Steuerkreuz: Gedrückt halten, um in diese Richtung zu laufen. Am PC: Pfeiltasten oder WASD.'],
-  ['#stage', 'Das Spielfeld. Bei „Wischen“: in eine Richtung wischen und den Finger liegen lassen, um zu laufen; kurz tippen legt eine Bombe.'],
-  ['.ctl-pick label', 'Handysteuerung: „Tasten“ zeigt Steuerkreuz und Bombenknopf, bei „Wischen“ steuerst du direkt auf dem Spielfeld. Gilt nur für diesen Browser.'],
+  ['#stage', 'Das Spielfeld. Bei „Wischen“: irgendwo in eine Richtung wischen und den Finger liegen lassen, um zu laufen. Bomben legst du mit dem 💣-Knopf.'],
+  ['.ctl-pick label', 'Handysteuerung: „Tasten“ zeigt ein Steuerkreuz, bei „Wischen“ wischst du irgendwo auf dem Bildschirm. Gilt nur für diesen Browser.'],
   ['#btn-mute', 'Schaltet Ton und Effekte an oder aus.'],
   ['#btn-quit, #btn-leave', 'Verlässt den Raum. Bist du der Gastgeber, endet das Spiel für alle.'],
   ['#btn-again', 'Nur für den Gastgeber: zurück in die Lobby, die Siege dieser Sitzung starten wieder bei 0.'],

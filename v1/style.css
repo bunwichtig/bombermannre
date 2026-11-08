@@ -1,0 +1,294 @@
+:root {
+  --bg: #14161f;
+  --panel: #1f2230;
+  --text: #eef0f6;
+  --muted: #9aa0b4;
+  --accent: #ff8a3d;
+  --accent2: #3dc6ff;
+  --border: #33374a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+#app { max-width: 760px; margin: 0 auto; padding: 16px; }
+header { text-align: center; margin-bottom: 16px; }
+h1 { margin: 0; font-size: 2.2rem; letter-spacing: .04em; color: var(--accent); }
+h2 { margin-top: 0; }
+.sub { margin: 4px 0 0; color: var(--muted); }
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 440px;
+  margin: 0 auto;
+}
+label { display: block; margin-bottom: 12px; color: var(--muted); font-size: .9rem; }
+input {
+  display: block; width: 100%; margin-top: 4px;
+  padding: 10px 12px; font-size: 1rem;
+  background: var(--bg); color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px;
+}
+input:focus { outline: 2px solid var(--accent2); border-color: transparent; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.row.center { justify-content: center; margin-top: 12px; }
+button {
+  flex: 1; min-width: 120px;
+  padding: 11px 16px; font-size: 1rem; font-weight: 600;
+  border: 0; border-radius: 8px; cursor: pointer;
+  background: var(--accent); color: #1b1006;
+}
+button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+button:disabled { opacity: .5; cursor: default; }
+.dice-btn { display: block; margin: -4px 0 4px auto; padding: 6px 12px; font-size: .85rem; }
+.msg { min-height: 1.4em; color: var(--accent2); margin: 12px 0 0; }
+.msg.err { color: #ff6b6b; }
+details { margin-top: 16px; color: var(--muted); font-size: .92rem; }
+summary { cursor: pointer; color: var(--text); }
+.hidden { display: none !important; }
+
+#lobby-players { list-style: none; padding: 0; margin: 0 0 8px; }
+#lobby-players li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.dot { width: 16px; height: 16px; border-radius: 50%; flex: none; }
+
+#hud { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 8px; font-size: .9rem; }
+.hud-p { display: flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--panel); border-radius: 999px; border: 1px solid var(--border); }
+.hud-p.dead { opacity: .45; }
+.hud-t { padding: 4px 10px; font-variant-numeric: tabular-nums; color: var(--muted); }
+#stage { position: relative; width: 100%; margin: 0 auto; }
+canvas { display: block; width: 100%; height: auto; border-radius: 8px; image-rendering: pixelated; }
+#overlay {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  text-align: center; font-size: 1.8rem; font-weight: 700; padding: 16px;
+  background: rgba(10, 12, 18, .55); border-radius: 8px; text-shadow: 0 2px 6px #000;
+}
+
+#touch { display: none; justify-content: space-between; align-items: center; margin-top: 12px; }
+.pad { display: grid; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(3, 56px); gap: 4px; }
+.pad button { min-width: 0; padding: 0; font-size: 1.3rem; background: var(--panel); color: var(--text); border: 1px solid var(--border); touch-action: none; }
+.pad [data-dir=up] { grid-column: 2; grid-row: 1; }
+.pad [data-dir=left] { grid-column: 1; grid-row: 2; }
+.pad [data-dir=right] { grid-column: 3; grid-row: 2; }
+.pad [data-dir=down] { grid-column: 2; grid-row: 3; }
+#touch-bomb { flex: none; width: 96px; height: 96px; min-width: 0; border-radius: 50%; font-size: 2.2rem; touch-action: none; }
+@media (pointer: coarse) { #touch { display: flex; } }
+
+/* Rangliste */
+.rank-panel { margin-top: 16px; }
+.rank-title { margin: 20px 0 8px; font-size: 1.2rem; }
+.ranking table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.ranking th, .ranking td { padding: 7px 6px; text-align: right; border-bottom: 1px solid var(--border); }
+.ranking th:nth-child(2), .ranking td:nth-child(2) { text-align: left; width: 100%; }
+.ranking th:first-child, .ranking td:first-child { text-align: center; }
+.ranking th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+.ranking tbody tr:first-child td { color: var(--accent); font-weight: 700; }
+.muted, .note { color: var(--muted); font-size: .9rem; }
+.note { margin: 10px 0 0; }
+
+/* Einstellungen in der Lobby */
+.settings { margin: 12px 0 4px; padding: 12px 0 0; border-top: 1px solid var(--border); }
+.settings select {
+  display: block; width: 100%; margin-top: 4px; padding: 10px 12px; font-size: 1rem;
+  background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px;
+}
+.settings input[type=range] { padding: 0; border: 0; background: none; accent-color: var(--accent); }
+.settings select:disabled, .settings input:disabled { opacity: .7; }
+.settings b { color: var(--text); }
+.touch-actions { display: flex; align-items: center; gap: 12px; }
+#touch-det { flex: none; width: 64px; height: 64px; min-width: 0; border-radius: 50%; font-size: 1.6rem; touch-action: none; background: var(--panel); border: 1px solid var(--border); }
+.mega-detail { margin: -4px 0 12px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; }
+.mega-detail summary { color: var(--text); font-size: .92rem; }
+.mega-detail label { margin: 10px 0 0; }
+.mega-detail b { font-weight: 500; color: var(--muted); }
+
+/* Spielmodus-Auswahl */
+.mode-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+.mode-pick label { margin: 0; position: relative; }
+.mode-pick input { position: absolute; opacity: 0; pointer-events: none; }
+.mode-pick span {
+  display: block; text-align: center; padding: 12px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--border); color: var(--text); font-weight: 600; font-size: 1rem;
+}
+.mode-pick input:checked + span { background: var(--accent); color: #1b1006; border-color: var(--accent); }
+.mode-pick input:focus-visible + span { outline: 2px solid var(--accent2); }
+.mode-pick input:disabled + span { cursor: default; }
+#mode-note { margin: 6px 0 14px; }
+
+/* Spielansicht: links oben Chat, links unten Rangliste, beide bündig mit dem Spielfeld */
+body.ingame #app { max-width: 1280px; }
+.game-layout { display: grid; grid-template-columns: 260px min(calc(100% - 276px), calc((100vh - 230px) * var(--ar, 1.15)));
+  grid-template-areas: ". hud" ". ctl" ". note" "side stage" ". touch" ". btns"; column-gap: 16px; justify-content: center; }
+.game-main { display: contents; }
+#hud { grid-area: hud; } .ctl-pick { grid-area: ctl; } #ctl-note { grid-area: note; } #stage { grid-area: stage; }
+#touch { grid-area: touch; } .game-main > .row { grid-area: btns; }
+.game-side { grid-area: side; display: flex; flex-direction: column; gap: 12px; min-height: 0; contain: size; }
+.game-side .panel { max-width: none; margin: 0; padding: 12px; }
+.chat-panel { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+.chat-panel #chat-slot-game { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+#chat-slot-game .chat { flex: 1; min-height: 0; margin: 0; padding: 0; border: 0; }
+#chat-slot-game .chat-log { flex: 1; max-height: none; min-height: 0; }
+.rank-side { flex: none; max-height: 45%; overflow-y: auto; }
+.rank-side h2 { font-size: 1.05rem; margin-bottom: 6px; }
+.rank-side .ranking table { font-size: .85rem; }
+.rank-side .ranking th, .rank-side .ranking td { padding: 5px 3px; }
+/* Ton an/aus am PC oben rechts, etwas größer */
+@media (min-width: 861px) {
+  body.ingame #btn-mute { position: fixed; top: 14px; right: 16px; z-index: 20; min-width: 0; padding: 10px 16px; font-size: 1.05rem; }
+}
+@media (max-width: 860px) {
+  .game-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "hud" "ctl" "note" "stage" "touch" "btns" "side"; }
+  .game-side { contain: none; margin-top: 12px; }
+  .chat-panel { display: contents; }
+  .rank-side { max-height: none; }
+}
+
+/* Technik-Erklärung */
+.tech-panel details { margin-top: 0; }
+.tech-panel summary { font-weight: 600; }
+.tech h3 { margin: 18px 0 6px; font-size: 1rem; color: var(--accent2); }
+.tech p { margin: 0 0 10px; line-height: 1.55; }
+.tech code { background: rgba(255,255,255,.07); padding: 1px 5px; border-radius: 4px; font-size: .88em; overflow-wrap: anywhere; }
+.tech .links { margin: 6px 0 0; padding-left: 20px; line-height: 1.7; }
+.tech a { color: var(--accent); }
+.tech a:hover { text-decoration: underline; }
+.tech-panel details[open] summary { margin-bottom: 12px; }
+
+/* Einladungslink */
+.invite { margin: 14px 0 18px; padding: 14px; border: 1px dashed var(--border); border-radius: 12px; }
+.invite > label { margin-bottom: 6px; }
+.inv-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.inv-row input { flex: 1 1 220px; min-width: 0; font-size: .85rem; }
+.inv-row button { flex: 0 0 auto; }
+.inv-pw { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; cursor: pointer; }
+.inv-pw input { width: auto; margin: 0; accent-color: var(--accent); }
+
+/* Handysteuerung Tasten/Wischen */
+.ctl-pick { display: flex; align-items: center; gap: 6px; margin: 6px 0 0; flex-wrap: wrap; }
+.ctl-lbl { color: var(--muted); font-size: .82rem; margin-right: auto; }
+.ctl-lbl small { display: block; opacity: .75; font-size: .72rem; }
+.ctl-pick label { margin: 0; position: relative; }
+.ctl-pick input { position: absolute; opacity: 0; pointer-events: none; }
+.ctl-pick label span { display: block; padding: 5px 12px; border: 1px solid var(--border); border-radius: 999px; font-size: .82rem; color: var(--text); cursor: pointer; }
+.ctl-pick input:checked + span { background: var(--accent2); border-color: var(--accent2); color: #061b24; font-weight: 600; }
+.ctl-pick input:focus-visible + span { outline: 2px solid var(--accent); }
+.ctl-note { font-size: .78rem; margin: 4px 0 8px; }
+body.ctl-wischen #stage { touch-action: none; }
+body.ctl-wischen #touch .pad { visibility: hidden; }
+
+/* Lobby kompakter */
+
+#screen-lobby h2 { font-size: 1.15rem; margin: 6px 0 8px; }
+#screen-lobby label { font-size: .82rem; margin-bottom: 9px; }
+#screen-lobby .note { font-size: .8rem; }
+.settings select { padding: 6px 10px; font-size: .88rem; }
+.mode-pick span { padding: 8px; font-size: .9rem; }
+#mode-note { margin: 4px 0 10px; }
+.mega-detail { padding: 6px 10px; }
+.mega-detail summary { font-size: .85rem; }
+.invite { margin: 10px 0 12px; padding: 10px; }
+.inv-row input { padding: 7px 10px; font-size: .8rem; }
+.inv-row button { padding: 7px 12px; font-size: .88rem; min-width: 0; }
+#screen-lobby .row button { padding: 9px 14px; font-size: .95rem; }
+
+/* Hinweis auf neue Version */
+.update-bar { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 20; display: flex; align-items: center; gap: 12px;
+  max-width: calc(100% - 32px); padding: 10px 12px 10px 16px; border-radius: 12px; background: var(--panel); border: 1px solid var(--accent2); box-shadow: 0 10px 30px rgba(0,0,0,.5); font-size: .9rem; }
+.update-bar button { flex: none; min-width: 0; padding: 7px 12px; font-size: .88rem; }
+.ver { text-align: center; color: var(--muted); font-size: .72rem; opacity: .6; margin: 18px 0 0; }
+
+/* Leichtere, kompaktere Optik für Start und Lobby */
+h1 { font-size: 1.8rem; font-weight: 650; letter-spacing: .02em; }
+.sub { font-size: .9rem; }
+h2 { font-size: 1.1rem; font-weight: 600; }
+.panel { padding: 16px; border-radius: 10px; }
+label { font-size: .84rem; margin-bottom: 10px; }
+input { padding: 7px 10px; font-size: .92rem; border-radius: 7px; }
+button { padding: 8px 14px; font-size: .92rem; font-weight: 500; border-radius: 7px; min-width: 100px; }
+.msg { font-size: .88rem; }
+details { font-size: .86rem; }
+summary { font-weight: 500; }
+.tech-panel summary { font-weight: 500; }
+.rank-panel h2 { font-size: 1rem; }
+.ranking { font-size: .88rem; }
+.mode-pick span { font-weight: 500; }
+.mode-pick input:checked + span { font-weight: 600; }
+#lobby-players li { padding: 6px 0; font-size: .92rem; }
+.dot { width: 12px; height: 12px; }
+.mode-pick span { font-weight: 400; }
+.mode-pick input:checked + span { font-weight: 500; }
+.tech-panel { margin-top: 12px; }
+#lobby-hint { font-size: .86rem; }
+.settings select { font-weight: 400; }
+h1 .re { color: var(--accent2); }
+
+/* ---------- Chat ---------- */
+.chat { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+#screen-lobby .chat { margin: 0 0 12px; padding: 0 0 12px; border-top: 0; border-bottom: 1px solid var(--border); }
+.chat-head { display: flex; align-items: center; gap: 8px; }
+.chat-head b { font-size: .95rem; margin-right: auto; }
+.chat-pop { display: flex; align-items: center; gap: 5px; margin: 0; font-size: .78rem; cursor: pointer; }
+.chat-pop input { width: auto; margin: 0; accent-color: var(--accent2); }
+.chat-x { display: none; flex: none; min-width: 0; padding: 3px 9px; font-size: .85rem; }
+.chat-log { list-style: none; margin: 0; padding: 0; max-height: 220px; min-height: 60px; overflow-y: auto; font-size: .85rem; line-height: 1.35; }
+#screen-lobby .chat-log { max-height: 140px; }
+.chat-log li { padding: 3px 0; overflow-wrap: anywhere; }
+.chat-log li .dot { display: inline-block; width: 9px; height: 9px; margin-right: 6px; vertical-align: 1px; }
+.chat-log li b { font-weight: 600; margin-right: 2px; }
+.chat-log li.mine b { color: var(--accent2); }
+.chat-form { display: flex; gap: 6px; }
+.chat-form input { flex: 1; min-width: 0; margin: 0; padding: 6px 9px; font-size: .88rem; }
+.chat-form button { flex: none; min-width: 0; padding: 6px 11px; font-size: .85rem; }
+.chat-toggle { display: none; }
+.chat-badge { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: #ff4d6d; color: #fff; font-size: .7rem; line-height: 18px; font-weight: 600; }
+.chat-toasts { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 30; display: flex; flex-direction: column; gap: 6px; width: min(420px, calc(100% - 24px)); pointer-events: none; }
+.chat-toast { padding: 8px 12px; border-radius: 10px; background: rgba(31,34,48,.95); border: 1px solid var(--accent2); font-size: .86rem; box-shadow: 0 8px 24px rgba(0,0,0,.45); overflow-wrap: anywhere; transition: opacity .5s, transform .5s; }
+.chat-toast .dot { display: inline-block; width: 9px; height: 9px; margin-right: 6px; }
+.chat-toast.out { opacity: 0; transform: translateY(-6px); }
+
+.chat-grip { display: none; }
+/* Handy und schmale Fenster: Chat über einen Knopf einblenden */
+@media (max-width: 860px) {
+  .chat-toggle:not(.hidden) { display: grid; place-items: center; position: fixed; right: 14px; bottom: 14px; z-index: 25; width: 52px; height: 52px; min-width: 0; padding: 0;
+    border-radius: 50%; font-size: 1.4rem; background: var(--panel); border: 1px solid var(--accent2); box-shadow: 0 8px 22px rgba(0,0,0,.5); }
+  .chat:not(.hidden) { display: none; }
+  body.chat-open #chat:not(.hidden) { display: flex; position: fixed; left: 8px; right: 8px; bottom: 8px; z-index: 26; margin: 0; padding: 12px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 -8px 30px rgba(0,0,0,.55); }
+  body.chat-open .chat-log { max-height: 40vh; }
+  body.chat-open .chat-toggle { display: none; }
+  .chat-x { display: block; }
+  .chat-grip { display: block; width: 44px; height: 5px; margin: -4px auto 2px; border-radius: 3px; background: var(--muted); opacity: .6; }
+  .chat-grip, .chat-head { touch-action: none; }
+  /* Im Spiel sitzt der Chat-Knopf oben rechts, damit er nicht über dem Bombenknopf liegt */
+  body.ingame .chat-toggle:not(.hidden) { top: 12px; bottom: auto; width: 46px; height: 46px; font-size: 1.25rem; }
+  body.ingame .chat-toasts { left: 12px; right: 70px; width: auto; transform: none; }
+}
+
+/* Verlassen ganz unten */
+.leave-row { margin-top: 16px; }
+/* Die Wahl Tasten/Wischen gibt es nur auf Touch-Geräten; am PC steuert die Tastatur */
+@media not (pointer: coarse) { .ctl-pick, .ctl-note { display: none; } }
+
+/* Versteckte Hilfe nach 10 schnellen Tipps */
+.help-bubble { position: fixed; z-index: 40; max-width: min(320px, calc(100vw - 16px)); padding: 10px 13px; border-radius: 10px; background: rgba(31,34,48,.97); border: 1px solid var(--accent); color: var(--text); font-size: .88rem; line-height: 1.4; box-shadow: 0 10px 28px rgba(0,0,0,.5); }
+
+/* Lobby: jedes Thema in einer eigenen Karte mit etwas Abstand */
+.lobby { max-width: 440px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.lobby .lcard { width: 100%; max-width: none; margin: 0; padding: 14px 16px; }
+.lobby .lcard > h2:first-child, .lobby .invite > h2 { margin: 0 0 10px; }
+.lobby .invite { border-style: solid; border-radius: 10px; }
+.lobby .rank-title { margin: 0 0 8px; font-size: 1.15rem; }
+.lobby .leave-row { margin-top: 2px; }
+#screen-lobby .chat { margin: 0; padding: 0; border: 0; }
+/* Chat: Verlauf in einem eigenen, sichtbar umrandeten Fenster */
+.chat-head b { font-size: 1rem; }
+.chat-log { background: rgba(0,0,0,.25); border: 1px solid var(--border); border-radius: 8px; padding: 6px 9px; }
+@media (max-width: 860px) { .lcard-chat { display: contents; } }
+
+/* Archiv-Hinweis */
+.archiv-bar { margin: 0 0 12px; padding: 8px 12px; border: 1px dashed var(--border); border-radius: 10px; font-size: .85rem; color: var(--muted); text-align: center; }
+.archiv-bar a { color: var(--accent); }

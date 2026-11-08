@@ -11,6 +11,7 @@
   <header>
     <h1>Bomb<span class="re">Re</span></h1>
     <p class="sub">Bomben legen, Kisten sprengen, als Letzter stehen bleiben. Für 2 bis 6 Spieler.</p>
+    <div id="head-tools" class="head-tools"></div>
   </header>
 
   <!-- Startbildschirm -->
@@ -80,14 +81,18 @@
         </ul>
       </div>
     </details>
+    <a class="archiv-btn" href="v1/">🗄️ Archiv: Version 1 spielen</a>
   </section>
 
   <!-- Lobby -->
-  <section id="screen-lobby" class="panel hidden">
-    <div id="chat-slot-lobby"></div>
-    <h2>Raum <span id="lobby-room"></span></h2>
-    <ul id="lobby-players"></ul>
-    <div class="invite">
+  <section id="screen-lobby" class="lobby hidden">
+    <div class="panel lcard lcard-chat"><div id="chat-slot-lobby"></div></div>
+    <div class="panel lcard">
+      <h2>Raum <span id="lobby-room"></span></h2>
+      <ul id="lobby-players"></ul>
+    </div>
+    <div class="panel lcard invite">
+      <h2>🔗 Einladen</h2>
       <label for="inv-link">Einladungslink zum Teilen</label>
       <div class="inv-row">
         <input id="inv-link" readonly>
@@ -97,6 +102,8 @@
       <label class="inv-pw"><input type="checkbox" id="inv-pw" checked> Passwort im Link mitschicken</label>
       <p id="inv-msg" class="note" role="status">Wer den Link öffnet, muss nur noch einen Namen eingeben und beitreten.</p>
     </div>
+    <div class="panel lcard">
+    <h2>🎮 Spielmodus</h2>
     <form id="settings" class="settings" onsubmit="return false">
       <div class="mode-pick" role="radiogroup" aria-label="Spielmodus">
         <label><input type="radio" name="mode" value="klassisch" checked><span>Klassisch</span></label>
@@ -155,8 +162,11 @@
     <div class="row">
       <button id="btn-start" class="hidden">Spiel starten</button>
     </div>
-    <h2 class="rank-title">🏆 Rangliste</h2>
-    <div class="ranking"></div>
+    </div>
+    <div class="panel lcard">
+      <h2 class="rank-title">🏆 Rangliste</h2>
+      <div class="ranking"></div>
+    </div>
     <div class="row center leave-row"><button id="btn-leave" class="secondary">Verlassen</button></div>
   </section>
 
@@ -165,10 +175,10 @@
     <div class="game-layout">
       <aside class="game-side">
         <div class="panel chat-panel"><div id="chat-slot-game"></div></div>
-        <div class="panel rank-side">
-          <h2>🏆 Rangliste</h2>
+        <details id="rank-fold" class="panel rank-side" open>
+          <summary><h2>🏆 Rangliste</h2></summary>
           <div class="ranking"></div>
-        </div>
+        </details>
       </aside>
       <div class="game-main">
         <div id="hud"></div>
@@ -177,7 +187,7 @@
           <label><input type="radio" name="ctl" value="tasten" checked><span>Tasten</span></label>
           <label><input type="radio" name="ctl" value="wischen"><span>Wischen</span></label>
         </div>
-        <p id="ctl-note" class="note ctl-note"></p>
+        <details id="ctl-help" class="ctl-help"><summary>Steuerung erklärt</summary><p id="ctl-note" class="note ctl-note"></p></details>
         <div id="stage">
           <canvas id="cv" width="720" height="624"></canvas>
           <div id="overlay" class="hidden"></div>
