@@ -30,7 +30,7 @@
       <p>Einer erstellt einen Raum mit Name und Passwort. Die anderen geben denselben Raumnamen und dasselbe Passwort ein und treten bei. Der Browser des Erstellers ist der Gastgeber und muss offen bleiben.</p>
       <p><b>Steuerung:</b> Pfeiltasten oder WASD zum Laufen, Leertaste oder Enter für eine Bombe, Strg zündet Fernzünder-Bomben. Auf dem Handy gibt es Tasten unter dem Spielfeld.</p>
       <p><b>Power-ups:</b> 💣 eine Bombe mehr, 🔥 größere Explosion, 👟 schneller laufen, 🦶 Bomben wegkicken.</p>
-      <p><b>Mega-Items</b> (mit bunt leuchtendem Rahmen, Anteil in der Lobby einstellbar): 🌟 Megafeuer – maximale Explosion und eine Bombe mehr, 💥 Durchschlag – deine Explosionen gehen durch Kisten, 🛡️ Schild – übersteht einen Treffer, 👻 Geist – 10 Sekunden durch Kisten und Bomben laufen, 📡 Fernzünder – deine Bomben gehen erst hoch, wenn du Strg drückst (spätestens nach 20 Sekunden).</p>
+      <p><b>Mega-Items</b> (mit bunt leuchtendem Rahmen, Anteil in der Lobby einstellbar): 🌟 Megafeuer – maximale Explosion und eine Bombe mehr, 💥 Durchschlag – deine Explosionen gehen durch Kisten, 🛡️ Schild – übersteht einen Treffer, 👻 Geist – 10 Sekunden durch Kisten und Bomben laufen, 🧨 Fernzünder – deine Bomben gehen erst hoch, wenn du Strg drückst (spätestens nach 20 Sekunden).</p>
       <p><b>Regeln:</b> Wer von einer Explosion getroffen wird, ist für die Runde raus. Wer als Letzter stehen bleibt, gewinnt die Runde. Es geht endlos weiter, jeder Rundensieg zählt in der Rangliste.</p>
     </details>
   </section>
@@ -133,7 +133,7 @@
       <label>Power-up-Chance pro Kiste: <b id="set-items-val">30 %</b>
         <input name="items" type="range" min="0" max="100" step="5" value="30">
       </label>
-      <label>Anteil Mega-Items (🌟 💥 🛡️ 👻 📡) an den Power-ups: <b id="set-mega-val">10 %</b>
+      <label>Anteil Mega-Items (🌟 💥 🛡️ 👻 🧨) an den Power-ups: <b id="set-mega-val">10 %</b>
         <input name="mega" type="range" min="0" max="100" step="5" value="10">
       </label>
       <details class="mega-detail">
@@ -151,7 +151,7 @@
           <label>👻 Geist: <b id="w-ghost"></b>
             <input name="w_ghost" type="range" min="0" max="100" step="5" value="100">
           </label>
-          <label>📡 Fernzünder: <b id="w-remote"></b>
+          <label>🧨 Fernzünder: <b id="w-remote"></b>
             <input name="w_remote" type="range" min="0" max="100" step="5" value="100">
           </label>
       </details>
@@ -200,7 +200,7 @@
             <button data-dir="down">▼</button>
           </div>
           <div class="touch-actions">
-            <button id="touch-det" title="Fernzünder">📡</button>
+            <button id="touch-det" title="Fernzünder">🧨</button>
             <button id="touch-bomb">💣</button>
           </div>
         </div>

@@ -18,7 +18,7 @@ Die Browser verbinden sich direkt miteinander (WebRTC über [PeerJS](https://pee
 - Bomben explodieren nach 2,5 Sekunden als Kreuz, sprengen Kisten und lösen andere Bomben aus.
 - Wer vom Feuer getroffen wird, ist für die Runde raus. Wer als Letzter stehen bleibt, gewinnt die Runde. Es wird endlos weitergespielt, bis der Gastgeber zur Lobby zurückgeht.
 - Power-ups aus Kisten: 💣 eine Bombe mehr, 🔥 größere Explosion, 👟 schneller laufen, 🦶 Bomben wegkicken.
-- **Mega-Items** (Anteil einstellbar) mit bunt leuchtendem Rahmen: 🌟 Megafeuer (maximale Explosion, eine Bombe mehr), 💥 Durchschlag (Explosionen gehen durch Kisten), 🛡️ Schild (übersteht einen Treffer), 👻 Geist (10 Sekunden durch Kisten und Bomben laufen), 📡 Fernzünder (Bomben gehen erst auf Strg hoch, spätestens nach 20 Sekunden).
+- **Mega-Items** (Anteil einstellbar) mit bunt leuchtendem Rahmen: 🌟 Megafeuer (maximale Explosion, eine Bombe mehr), 💥 Durchschlag (Explosionen gehen durch Kisten), 🛡️ Schild (übersteht einen Treffer), 👻 Geist (10 Sekunden durch Kisten und Bomben laufen), 🧨 Fernzünder (Bomben gehen erst auf Strg hoch, spätestens nach 20 Sekunden).
 - Ecken-Hilfe: Wer knapp an einer Abzweigung vorbei ist oder vor einer Ecke steht, rutscht automatisch in den freien Gang.
 
 ## Einstellungen (Gastgeber, in der Lobby)

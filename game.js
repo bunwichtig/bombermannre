@@ -24,7 +24,7 @@ const KICK_SPEED = 10;       // Felder pro Sekunde für gekickte Bomben
 const BASE_SPEED = 3.6, SPEED_STEP = 0.6, MAX_SPEED = 6;
 const ITEMS = ['bomb', 'fire', 'speed', 'kick', 'mega', 'pierce', 'shield', 'ghost', 'remote'];
 const ITEM_WEIGHTS = [4, 4, 3, 1.5, 0.4, 0.4, 0.4, 0.4, 0.4];
-const ITEM_ICON = { bomb: '💣', fire: '🔥', speed: '👟', kick: '🦶', mega: '🌟', pierce: '💥', shield: '🛡️', ghost: '👻', remote: '📡' };
+const ITEM_ICON = { bomb: '💣', fire: '🔥', speed: '👟', kick: '🦶', mega: '🌟', pierce: '💥', shield: '🛡️', ghost: '👻', remote: '🧨' };
 const MEGA = new Set(['mega', 'pierce', 'shield', 'ghost', 'remote']); // seltene Mega-Items
 const REMOTE_MAX = 20;       // Sekunden, nach denen eine Fernzünder-Bombe spätestens von selbst hochgeht
 const GHOST_TIME = 10;       // Sekunden durch Kisten und Bomben laufen
@@ -1284,7 +1284,7 @@ function draw(v, isHost) {
   // Anzeige oben
   const hud = v.players.map((p) =>
     `<span class="hud-p${p.alive || v.phase === 'lobby' ? '' : ' dead'}"><span class="dot" style="background:${p.color}"></span>${esc(p.name)} <b title="Siege in dieser Sitzung">🏆 ${p.score}</b>` +
-    (p.id === S.myId ? ` <small>💣${p.bombs} 🔥${p.range} 👟${p.speed}${p.kick ? ' 🦶' : ''}${p.pierce ? ' 💥' : ''}${p.shield ? ' 🛡️' : ''}${p.ghost ? ' 👻' + p.ghost : ''}${p.remote ? ' 📡 Strg' : ''}</small>` : '') + '</span>').join('');
+    (p.id === S.myId ? ` <small>💣${p.bombs} 🔥${p.range} 👟${p.speed}${p.kick ? ' 🦶' : ''}${p.pierce ? ' 💥' : ''}${p.shield ? ' 🛡️' : ''}${p.ghost ? ' 👻' + p.ghost : ''}${p.remote ? ' 🧨 Strg' : ''}</small>` : '') + '</span>').join('');
   if (hud !== lastHud) { $('hud').innerHTML = hud; lastHud = hud; }
   const ov = $('overlay');
   ov.classList.toggle('hidden', !v.msg);
@@ -1453,7 +1453,7 @@ window.Funkenfeld = { Game, S, Sound };
 // Versteckte Hilfe: Wer 10-mal schnell auf dieselbe Stelle tippt (oder klickt), bekommt erklärt, was sie tut.
 const HELP = [
   ['#touch-bomb', 'Bombe legen. Sie explodiert nach kurzer Zeit in alle vier Richtungen und sprengt Kisten. Am PC: Leertaste oder Enter.'],
-  ['#touch-det', 'Fernzünder: Mit dem 📡-Item gehen deine Bomben erst hoch, wenn du hier tippst (spätestens nach 20 Sekunden). Am PC: Strg.'],
+  ['#touch-det', 'Fernzünder: Mit dem 🧨-Item gehen deine Bomben erst hoch, wenn du hier tippst (spätestens nach 20 Sekunden). Am PC: Strg.'],
   ['.pad button', 'Steuerkreuz: Gedrückt halten, um in diese Richtung zu laufen. Am PC: Pfeiltasten oder WASD.'],
   ['#stage', 'Das Spielfeld. Bei „Wischen“: irgendwo in eine Richtung wischen und den Finger liegen lassen, um zu laufen. Bomben legst du mit dem 💣-Knopf.'],
   ['.ctl-pick label', 'Handysteuerung: „Tasten“ zeigt ein Steuerkreuz, bei „Wischen“ wischst du irgendwo auf dem Bildschirm. Gilt nur für diesen Browser.'],
