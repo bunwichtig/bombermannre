@@ -11,6 +11,7 @@
   <header>
     <h1>Bomb<span class="re">Re</span></h1>
     <p class="sub">Bomben legen, Kisten sprengen, als Letzter stehen bleiben. Für 2 bis 6 Spieler.</p>
+    <div id="head-tools" class="head-tools"></div>
   </header>
 
   <!-- Startbildschirm -->
@@ -80,6 +81,7 @@
         </ul>
       </div>
     </details>
+    <a class="archiv-btn" href="v1/">🗄️ Archiv: Version 1 spielen</a>
   </section>
 
   <!-- Lobby -->
@@ -173,10 +175,10 @@
     <div class="game-layout">
       <aside class="game-side">
         <div class="panel chat-panel"><div id="chat-slot-game"></div></div>
-        <div class="panel rank-side">
-          <h2>🏆 Rangliste</h2>
+        <details id="rank-fold" class="panel rank-side" open>
+          <summary><h2>🏆 Rangliste</h2></summary>
           <div class="ranking"></div>
-        </div>
+        </details>
       </aside>
       <div class="game-main">
         <div id="hud"></div>
@@ -185,7 +187,7 @@
           <label><input type="radio" name="ctl" value="tasten" checked><span>Tasten</span></label>
           <label><input type="radio" name="ctl" value="wischen"><span>Wischen</span></label>
         </div>
-        <p id="ctl-note" class="note ctl-note"></p>
+        <details id="ctl-help" class="ctl-help"><summary>Steuerung erklärt</summary><p id="ctl-note" class="note ctl-note"></p></details>
         <div id="stage">
           <canvas id="cv" width="720" height="624"></canvas>
           <div id="overlay" class="hidden"></div>

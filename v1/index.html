@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>V1 Archiv · BombRe</title>
+<link rel="stylesheet" href="style.css?v=v1">
+</head>
+<body>
+<main id="app">
+  <p class="archiv-bar">🗄️ Du spielst die archivierte <b>Version 1</b>. <a href="../">Zur aktuellen Version</a></p>
+  <header>
+    <h1>Bomb<span class="re">Re</span></h1>
+    <p class="sub">Bomben legen, Kisten sprengen, als Letzter stehen bleiben. Für 2 bis 6 Spieler.</p>
+  </header>
+
+  <!-- Startbildschirm -->
+  <section id="screen-start" class="panel">
+    <label>Dein Name <input id="in-name" maxlength="12" autocomplete="nickname" placeholder="z. B. Dave"></label>
+    <label>Raumname <input id="in-room" maxlength="24" autocomplete="off" placeholder="z. B. kumpelrunde"></label>
+    <label>Passwort <input id="in-pass" type="text" maxlength="40" autocomplete="off" spellcheck="false"></label>
+    <button id="btn-random" type="button" class="secondary dice-btn" title="Neuen Namen, Raum und Passwort würfeln">🎲 Zufällig</button>
+    <div class="row">
+      <button id="btn-host">Raum erstellen</button>
+      <button id="btn-join" class="secondary">Raum beitreten</button>
+    </div>
+    <p id="start-msg" class="msg" role="status"></p>
+    <details>
+      <summary>So funktioniert es</summary>
+      <p>Einer erstellt einen Raum mit Name und Passwort. Die anderen geben denselben Raumnamen und dasselbe Passwort ein und treten bei. Der Browser des Erstellers ist der Gastgeber und muss offen bleiben.</p>
+      <p><b>Steuerung:</b> Pfeiltasten oder WASD zum Laufen, Leertaste oder Enter für eine Bombe, Strg zündet Fernzünder-Bomben. Auf dem Handy gibt es Tasten unter dem Spielfeld.</p>
+      <p><b>Power-ups:</b> 💣 eine Bombe mehr, 🔥 größere Explosion, 👟 schneller laufen, 🦶 Bomben wegkicken.</p>
+      <p><b>Mega-Items</b> (mit bunt leuchtendem Rahmen, Anteil in der Lobby einstellbar): 🌟 Megafeuer – maximale Explosion und eine Bombe mehr, 💥 Durchschlag – deine Explosionen gehen durch Kisten, 🛡️ Schild – übersteht einen Treffer, 👻 Geist – 10 Sekunden durch Kisten und Bomben laufen, 📡 Fernzünder – deine Bomben gehen erst hoch, wenn du Strg drückst (spätestens nach 20 Sekunden).</p>
+      <p><b>Regeln:</b> Wer von einer Explosion getroffen wird, ist für die Runde raus. Wer als Letzter stehen bleibt, gewinnt die Runde. Es geht endlos weiter, jeder Rundensieg zählt in der Rangliste.</p>
+    </details>
+  </section>
+  <section id="rank-start" class="panel rank-panel">
+    <h2>🏆 Rangliste</h2>
+    <div class="ranking"></div>
+    <p class="note">Gespeichert in diesem Browser. Beim Beitreten gleichen alle Mitspieler ihre Ranglisten ab.</p>
+  </section>
+
+  <!-- Technik-Erklärung -->
+  <section id="tech-start" class="panel tech-panel">
+    <details>
+      <summary>🛠️ Wie funktioniert das technisch?</summary>
+      <div class="tech">
+        <p><b>Kurz gesagt:</b> Es gibt keinen Spiele-Server. Die Seite selbst ist nur eine Handvoll Dateien (HTML, CSS, JavaScript), die GitHub Pages kostenlos ausliefert. Gespielt wird direkt zwischen euren Browsern.</p>
+
+        <h3>1. Die Seite laden</h3>
+        <p>Wer die Adresse öffnet, bekommt von GitHub Pages die statischen Dateien. Ab da läuft alles im eigenen Browser: Spielfeld zeichnen, Steuerung, Sound. Gebaut ist das ohne Framework, in reinem JavaScript. Gezeichnet wird auf einem <code>&lt;canvas&gt;</code>, die Geräusche erzeugt die Web Audio API live, es gibt also keine Sounddateien.</p>
+
+        <h3>2. Sich finden</h3>
+        <p>Browser können nicht einfach so miteinander reden, sie müssen sich erst „vorstellen“. Dafür nutzt das Spiel den kostenlosen Vermittlungsdienst von PeerJS. Wer einen Raum erstellt, meldet sich dort unter einer Kennung an, die aus dem Raumnamen gebildet wird (<code>funkenfeld-v1-raumname</code>). Wer beitritt, fragt nach genau dieser Kennung. Der Vermittler tauscht nur kurz die Verbindungsdaten aus und ist danach raus. Spielinhalte laufen nie über ihn.</p>
+
+        <h3>3. Direkt verbinden</h3>
+        <p>Danach steht eine direkte Verbindung über <b>WebRTC</b>, dieselbe Technik, die Videoanrufe im Browser nutzen. Damit das auch durch Heimrouter klappt, helfen sogenannte STUN-Server: Sie verraten jedem Browser, unter welcher öffentlichen Adresse er erreichbar ist. Lässt ein Netz gar keine direkte Verbindung zu (manche Firmen- oder Mobilfunknetze), kann ein TURN-Server die Daten weiterreichen. PeerJS bringt dafür eigene Standard-Server mit. Die Spieldaten sind in jedem Fall verschlüsselt (DTLS). Klappt es trotzdem nicht, hilft meist ein anderes Netz, zum Beispiel WLAN statt Mobilfunk.</p>
+
+        <h3>4. Wer rechnet?</h3>
+        <p>Der Browser, der den Raum erstellt hat, ist der <b>Gastgeber</b>. Nur er rechnet das Spiel, 60-mal pro Sekunde: Bewegungen, Bomben, Explosionen, Treffer. Die anderen schicken nur ihre Tastendrücke und bekommen 20-mal pro Sekunde den aktuellen Spielstand zurück, den ihr Browser dann zeichnet. Das nennt man ein <i>autoritatives Host-Modell</i>. So gibt es keine Streitfälle, wer wen zuerst erwischt hat. Deshalb muss der Tab des Gastgebers offen bleiben.</p>
+
+        <h3>5. Passwort</h3>
+        <p>Das Passwort wird nie im Klartext verschickt. Der Browser bildet daraus einen SHA-256-Hash (eine Art Fingerabdruck), und der Gastgeber vergleicht nur diese Fingerabdrücke. Das hält Fremde aus dem Raum. Ein Bankschloss ist es aber nicht, denn wer den Raumnamen kennt, kann es mit Raten versuchen. Wählt also ein Passwort, das man nicht sofort errät.</p>
+        <p><b>Einladungslink:</b> Raum und Passwort stehen dort hinter dem <code>#</code>. Diesen Teil einer Adresse schickt der Browser nie an einen Server, auch nicht an GitHub. Nach dem Öffnen nimmt das Spiel ihn sofort wieder aus der Adresszeile.</p>
+
+        <h3>6. Rangliste und Einstellungen</h3>
+        <p>Rangliste, Name, zuletzt benutzter Raum mit Passwort und Lobby-Einstellungen liegen im <code>localStorage</code> deines Browsers, also nur auf deinem Gerät. Beim Beitreten tauschen die Browser ihre Ranglisten aus und führen sie zusammen. So haben alle denselben Stand, ganz ohne Datenbank.</p>
+
+        <h3>Zum Weiterlesen</h3>
+        <ul class="links">
+          <li><a href="https://github.com/bunwichtig/bombermannre" target="_blank" rel="noopener">Quelltext von BombRe auf GitHub</a></li>
+          <li><a href="https://docs.github.com/de/pages/getting-started-with-github-pages/about-github-pages" target="_blank" rel="noopener">GitHub Pages: kostenloses Hosting statischer Seiten</a></li>
+          <li><a href="https://peerjs.com/" target="_blank" rel="noopener">PeerJS: Vermittlung und einfache WebRTC-Verbindungen</a></li>
+          <li><a href="https://developer.mozilla.org/de/docs/Web/API/WebRTC_API" target="_blank" rel="noopener">WebRTC bei MDN</a></li>
+          <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Protocols" target="_blank" rel="noopener">STUN, TURN und NAT: wie Browser sich durch Router finden (MDN)</a></li>
+          <li><a href="https://developer.mozilla.org/de/docs/Web/API/RTCDataChannel" target="_blank" rel="noopener">RTCDataChannel: der Datenkanal fürs Spiel (MDN)</a></li>
+          <li><a href="https://gabrielgambetta.com/client-server-game-architecture.html" target="_blank" rel="noopener">Gabriel Gambetta: autoritativer Host in Mehrspielerspielen (englisch)</a></li>
+          <li><a href="https://developer.mozilla.org/de/docs/Web/API/SubtleCrypto/digest" target="_blank" rel="noopener">SHA-256 im Browser: SubtleCrypto.digest (MDN)</a></li>
+          <li><a href="https://developer.mozilla.org/de/docs/Web/API/Canvas_API" target="_blank" rel="noopener">Canvas API (MDN)</a> und <a href="https://developer.mozilla.org/de/docs/Web/API/Web_Audio_API" target="_blank" rel="noopener">Web Audio API (MDN)</a></li>
+          <li><a href="https://developer.mozilla.org/de/docs/Web/API/Window/localStorage" target="_blank" rel="noopener">localStorage (MDN)</a></li>
+        </ul>
+      </div>
+    </details>
+  </section>
+
+  <!-- Lobby -->
+  <section id="screen-lobby" class="lobby hidden">
+    <div class="panel lcard lcard-chat"><div id="chat-slot-lobby"></div></div>
+    <div class="panel lcard">
+      <h2>Raum <span id="lobby-room"></span></h2>
+      <ul id="lobby-players"></ul>
+    </div>
+    <div class="panel lcard invite">
+      <h2>🔗 Einladen</h2>
+      <label for="inv-link">Einladungslink zum Teilen</label>
+      <div class="inv-row">
+        <input id="inv-link" readonly>
+        <button id="btn-copy" type="button">Kopieren</button>
+        <button id="btn-share" type="button" class="secondary hidden">Teilen</button>
+      </div>
+      <label class="inv-pw"><input type="checkbox" id="inv-pw" checked> Passwort im Link mitschicken</label>
+      <p id="inv-msg" class="note" role="status">Wer den Link öffnet, muss nur noch einen Namen eingeben und beitreten.</p>
+    </div>
+    <div class="panel lcard">
+    <h2>🎮 Spielmodus</h2>
+    <form id="settings" class="settings" onsubmit="return false">
+      <div class="mode-pick" role="radiogroup" aria-label="Spielmodus">
+        <label><input type="radio" name="mode" value="klassisch" checked><span>Klassisch</span></label>
+        <label><input type="radio" name="mode" value="individuell"><span>Individuell</span></label>
+      </div>
+      <p id="mode-note" class="note"></p>
+      <label>Spieler im Raum (höchstens)
+        <select name="players">
+          <option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option>
+        </select>
+      </label>
+      <div id="set-indiv">
+      <label>Spielvariante
+        <select name="variant">
+          <option value="klassisch">Klassisch</option>
+          <option value="schrumpf">Schrumpfendes Feld (ab 2:00 fallen Blöcke)</option>
+        </select>
+      </label>
+      <label>Feldgröße
+        <select name="size">
+          <option value="klein">Klein (11 × 9)</option>
+          <option value="mittel">Mittel (15 × 13)</option>
+          <option value="gross">Groß (19 × 15)</option>
+          <option value="riesig">Riesig (23 × 17)</option>
+        </select>
+      </label>
+      <label>Power-up-Chance pro Kiste: <b id="set-items-val">30 %</b>
+        <input name="items" type="range" min="0" max="100" step="5" value="30">
+      </label>
+      <label>Anteil Mega-Items (🌟 💥 🛡️ 👻 📡) an den Power-ups: <b id="set-mega-val">10 %</b>
+        <input name="mega" type="range" min="0" max="100" step="5" value="10">
+      </label>
+      <details class="mega-detail">
+        <summary>Mega-Items einzeln einstellen</summary>
+        <p class="note">Gewichtung untereinander. 0 schaltet ein Item ab. Gleiche Werte bedeuten gleich häufig.</p>
+          <label>🌟 Megafeuer: <b id="w-mega"></b>
+            <input name="w_mega" type="range" min="0" max="100" step="5" value="100">
+          </label>
+          <label>💥 Durchschlag: <b id="w-pierce"></b>
+            <input name="w_pierce" type="range" min="0" max="100" step="5" value="100">
+          </label>
+          <label>🛡️ Schild: <b id="w-shield"></b>
+            <input name="w_shield" type="range" min="0" max="100" step="5" value="100">
+          </label>
+          <label>👻 Geist: <b id="w-ghost"></b>
+            <input name="w_ghost" type="range" min="0" max="100" step="5" value="100">
+          </label>
+          <label>📡 Fernzünder: <b id="w-remote"></b>
+            <input name="w_remote" type="range" min="0" max="100" step="5" value="100">
+          </label>
+      </details>
+      </div>
+      <p id="settings-note" class="note"></p>
+    </form>
+    <p id="lobby-hint" class="msg"></p>
+    <div class="row">
+      <button id="btn-start" class="hidden">Spiel starten</button>
+    </div>
+    </div>
+    <div class="panel lcard">
+      <h2 class="rank-title">🏆 Rangliste</h2>
+      <div class="ranking"></div>
+    </div>
+    <div class="row center leave-row"><button id="btn-leave" class="secondary">Verlassen</button></div>
+  </section>
+
+  <!-- Spiel -->
+  <section id="screen-game" class="hidden">
+    <div class="game-layout">
+      <aside class="game-side">
+        <div class="panel chat-panel"><div id="chat-slot-game"></div></div>
+        <div class="panel rank-side">
+          <h2>🏆 Rangliste</h2>
+          <div class="ranking"></div>
+        </div>
+      </aside>
+      <div class="game-main">
+        <div id="hud"></div>
+        <div class="ctl-pick" role="radiogroup" aria-label="Handysteuerung">
+          <span class="ctl-lbl">📱 Steuerung <small>(gilt für diesen Browser)</small></span>
+          <label><input type="radio" name="ctl" value="tasten" checked><span>Tasten</span></label>
+          <label><input type="radio" name="ctl" value="wischen"><span>Wischen</span></label>
+        </div>
+        <p id="ctl-note" class="note ctl-note"></p>
+        <div id="stage">
+          <canvas id="cv" width="720" height="624"></canvas>
+          <div id="overlay" class="hidden"></div>
+        </div>
+        <div id="touch">
+          <div class="pad">
+            <button data-dir="up">▲</button>
+            <button data-dir="left">◀</button>
+            <button data-dir="right">▶</button>
+            <button data-dir="down">▼</button>
+          </div>
+          <div class="touch-actions">
+            <button id="touch-det" title="Fernzünder">📡</button>
+            <button id="touch-bomb">💣</button>
+          </div>
+        </div>
+        <div class="row center">
+          <button id="btn-again" class="hidden secondary" title="Zurück zur Lobby, Siege dieser Sitzung auf 0">Zur Lobby</button>
+          <button id="btn-mute" class="secondary"></button>
+        </div>
+      </div>
+    </div>
+    <div class="row center leave-row"><button id="btn-quit" class="secondary">Verlassen</button></div>
+  </section>
+  <div id="update-bar" class="update-bar hidden" role="status">
+    <span>Es gibt eine neue Version von BombRe.</span>
+    <button id="btn-update" type="button">Jetzt laden</button>
+  </div>
+  <p class="ver">Archiv · Version 1</p>
+  <!-- Chat: wird je nach Bildschirm in die Lobby oder neben das Spielfeld gehängt -->
+  <div id="chat" class="chat hidden">
+    <div class="chat-grip" aria-hidden="true"></div>
+    <div class="chat-head">
+      <b>💬 Chat</b>
+      <label class="chat-pop" title="Neue Nachrichten kurz über dem Spielfeld einblenden"><input type="checkbox" id="chat-popup" checked> Popups</label>
+      <button id="chat-close" type="button" class="secondary chat-x" aria-label="Chat schließen">✕</button>
+    </div>
+    <ul id="chat-log" class="chat-log" aria-live="polite"></ul>
+    <form id="chat-form" class="chat-form" autocomplete="off">
+      <input id="chat-in" maxlength="200" placeholder="Nachricht …" enterkeyhint="send">
+      <button type="submit">Senden</button>
+    </form>
+  </div>
+  <button id="chat-toggle" type="button" class="chat-toggle hidden" aria-label="Chat öffnen">💬<span id="chat-badge" class="chat-badge hidden">0</span></button>
+  <div id="chat-toasts" class="chat-toasts" aria-hidden="true"></div>
+</main>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="game.js?v=v1"></script>
+</body>
+</html>

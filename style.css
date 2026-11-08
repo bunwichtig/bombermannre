@@ -178,7 +178,8 @@ body.ingame #app { max-width: 1280px; }
 .ctl-pick input:focus-visible + span { outline: 2px solid var(--accent); }
 .ctl-note { font-size: .78rem; margin: 4px 0 8px; }
 body.ctl-wischen #stage { touch-action: none; }
-body.ctl-wischen #touch .pad { visibility: hidden; }
+body.ctl-wischen #touch .pad { display: none; }
+body.ctl-wischen #touch { justify-content: flex-end; }
 
 /* Lobby kompakter */
 
@@ -288,3 +289,36 @@ h1 .re { color: var(--accent2); }
 .chat-head b { font-size: 1rem; }
 .chat-log { background: rgba(0,0,0,.25); border: 1px solid var(--border); border-radius: 8px; padding: 6px 9px; }
 @media (max-width: 860px) { .lcard-chat { display: contents; } }
+
+/* Archiv-Knopf unter der Technik-Erklärung */
+.archiv-btn { display: block; margin-top: 12px; padding: 9px 12px; text-align: center; border: 1px solid var(--border); border-radius: 8px; color: var(--text); text-decoration: none; font-size: .9rem; }
+.archiv-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Steuerungs-Erklärung und Rangliste einklappbar */
+.ctl-help { grid-area: note; margin: 4px 0 8px; font-size: .8rem; }
+.ctl-help summary { color: var(--muted); cursor: pointer; }
+.ctl-help .ctl-note { margin: 4px 0 0; }
+#rank-fold > summary { cursor: pointer; }
+#rank-fold > summary h2 { display: inline; }
+#rank-fold[open] > summary { margin-bottom: 6px; }
+@media (min-width: 861px) {
+  #rank-fold > summary { pointer-events: none; list-style: none; }
+  #rank-fold > summary::-webkit-details-marker { display: none; }
+}
+@media not (pointer: coarse) { .ctl-help { display: none; } }
+.head-tools { display: none; }
+
+/* Handy im Spiel: Titel links, Untertitel weg, Tasten/Wischen und Chat oben rechts */
+@media (max-width: 860px) {
+  body.ingame header { display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left; margin-bottom: 8px; }
+  body.ingame header h1 { font-size: 1.35rem; }
+  body.ingame header .sub { display: none; }
+  body.ingame .head-tools { display: flex; align-items: center; gap: 8px; }
+  .head-tools .ctl-lbl { display: none; }
+  .head-tools .ctl-pick { margin: 0; flex-wrap: nowrap; }
+  body.ingame .head-tools .chat-toggle:not(.hidden) { display: grid; place-items: center; position: relative; top: auto; right: auto; bottom: auto; width: 40px; height: 40px; font-size: 1.15rem; box-shadow: none; }
+  body.ingame .chat-toasts { right: 12px; }
+  /* Wischen überall: auf diesen Flächen nicht scrollen, damit die Geste beim Spiel ankommt */
+  body.ingame.ctl-wischen header, body.ingame.ctl-wischen #hud, body.ingame.ctl-wischen #stage,
+  body.ingame.ctl-wischen #touch, body.ingame.ctl-wischen .game-main > .row, body.ingame.ctl-wischen .ctl-help { touch-action: none; }
+}
