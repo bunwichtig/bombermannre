@@ -679,10 +679,13 @@ function arrangeMobile(game, entering) {
     // Verlassen als ✕ ganz links vor dem Titel, Ton als Symbol links neben der Steuerungswahl
     document.querySelector('header').prepend($('btn-quit'));
     tools.append($('btn-mute'), pick, $('chat-toggle'));
+    const host = S.role === 'host', q = $('btn-quit');
+    q.title = host ? 'Zurück zur Lobby' : 'Raum verlassen'; q.setAttribute('aria-label', q.title);
     $('ctl-help').open = false; $('rank-fold').open = false;
   } else if (!on && mobileArranged) {
     $('ctl-help').before(pick);
     for (const h of homes) h.parent.insertBefore(h.el, h.next);
+    $('btn-quit').title = 'Verlassen'; $('btn-quit').setAttribute('aria-label', 'Verlassen');
   }
   if (!on) $('rank-fold').open = true;
   else if (entering) { $('ctl-help').open = false; $('rank-fold').open = false; scrollTo(0, 0); }
@@ -1059,7 +1062,9 @@ $('btn-host').onclick = hostRoom;
 $('btn-join').onclick = joinRoom;
 $('in-pass').addEventListener('keydown', (e) => { if (e.key === 'Enter') joinRoom(); });
 $('btn-leave').onclick = () => leave();
-$('btn-quit').onclick = () => leave();
+// Auf dem Handy ist der Knopf das ✕ oben links: Der Gastgeber holt damit alle zurück in die Lobby,
+// Mitspieler verlassen den Raum (sie können die Lobby nicht allein öffnen).
+$('btn-quit').onclick = () => { if (mobileArranged && S.role === 'host') $('btn-again').onclick(); else leave(); };
 $('btn-start').onclick = () => {
   if (S.role !== 'host') return;
   S.game.startMatch();
@@ -1441,7 +1446,8 @@ const HELP = [
   ['#stage', 'Das Spielfeld. Bei „Wischen“: irgendwo in eine Richtung wischen und den Finger liegen lassen, um zu laufen. Bomben legst du mit dem 💣-Knopf.'],
   ['.ctl-pick label', 'Handysteuerung: „Tasten“ zeigt ein Steuerkreuz, bei „Wischen“ wischst du irgendwo auf dem Bildschirm. Gilt nur für diesen Browser.'],
   ['#btn-mute', 'Schaltet Ton und Effekte an oder aus.'],
-  ['#btn-quit, #btn-leave', 'Verlässt den Raum. Bist du der Gastgeber, endet das Spiel für alle.'],
+  ['#btn-quit', 'Auf dem Handy (✕): Der Gastgeber holt alle zurück in die Lobby, Mitspieler verlassen den Raum. Am PC: Raum verlassen.'],
+  ['#btn-leave', 'Verlässt den Raum. Bist du der Gastgeber, endet das Spiel für alle.'],
   ['#btn-again', 'Nur für den Gastgeber: zurück in die Lobby, die Siege dieser Sitzung starten wieder bei 0.'],
   ['#btn-start', 'Startet das Spiel für alle im Raum. Das kann nur der Gastgeber.'],
   ['#btn-host', 'Erstellt einen neuen Raum mit Name und Passwort. Dein Browser ist dann der Gastgeber, auf dem das Spiel läuft.'],
