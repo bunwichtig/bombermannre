@@ -724,7 +724,7 @@ function readForm() {
   try { localStorage.setItem('ff-name', name); localStorage.setItem('ff-room', roomRaw); localStorage.setItem('ff-pass', pw); } catch (e) {}
   if (!slug(roomRaw)) { startMsg('Bitte einen Raumnamen eingeben.', true); return null; }
   if (!pw) { startMsg('Bitte ein Passwort eingeben.', true); return null; }
-  return { name: name.slice(0, 12), room: slug(roomRaw), pw };
+  return { name: name.slice(0, 12), room: slug(roomRaw), roomName: roomRaw.slice(0, 24), pw };
 }
 function setBusy(b) { $('btn-host').disabled = b; $('btn-join').disabled = b; }
 
@@ -732,7 +732,7 @@ async function hostRoom() {
   const f = readForm(); if (!f) return;
   setBusy(true); startMsg('Raum wird erstellt …');
   try {
-    S.role = 'host'; S.room = f.room; S.pw = f.pw; S.pwHash = await hashPw(f.room, f.pw);
+    S.role = 'host'; S.room = f.room; S.roomName = f.roomName; S.pw = f.pw; S.pwHash = await hashPw(f.room, f.pw);
     S.game = new Game();
     S.myId = 'host';
     S.game.addPlayer('host', f.name);
@@ -790,7 +790,7 @@ function onClientConnect(conn) {
 }
 
 function broadcastLobby() {
-  const msg = { t: 'lobby', players: S.game.players.map((p) => ({ id: p.id, name: p.name, color: p.color })), phase: S.game.phase, settings: S.game.settings };
+  const msg = { t: 'lobby', players: S.game.players.map((p) => ({ id: p.id, name: p.name, color: p.color })), phase: S.game.phase, settings: S.game.settings, roomName: S.roomName };
   for (const c of S.conns.values()) c.send(msg);
   renderLobby(msg);
 }
@@ -800,7 +800,7 @@ async function joinRoom() {
   setBusy(true); startMsg('Verbinde mit dem Raum …');
   try {
     const conn = await Net.join(f.room);
-    S.role = 'client'; S.room = f.room; S.pw = f.pw; S.conn = conn;
+    S.role = 'client'; S.room = f.room; S.roomName = f.roomName; S.pw = f.pw; S.conn = conn;
     const pw = await hashPw(f.room, f.pw);
     await new Promise((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error('Keine Antwort vom Gastgeber.')), 10000);
@@ -842,7 +842,7 @@ function onHostMessage(m) {
 
 function enterLobby() {
   show('lobby');
-  $('lobby-room').textContent = '„' + S.room + '“';
+  $('lobby-room').textContent = '„' + (S.roomName || S.room) + '“';
   updateInvite();
   if (S.role === 'host') broadcastLobby();
 }
@@ -856,7 +856,8 @@ function hexToPw(hex) {
   try { return new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(hex.match(/../g).map((h) => parseInt(h, 16)))); } catch (e) { return ''; }
 }
 function inviteLink() {
-  const p = new URLSearchParams({ raum: S.room });
+  // Raumname so, wie er eingegeben wurde (Großbuchstaben bleiben); die Raum-Kennung dahinter ist immer klein geschrieben
+  const p = new URLSearchParams({ raum: S.roomName || S.room });
   // Passwort als Hex-Code: übersteht auch Apps, die den Link in Kleinbuchstaben umwandeln (Großbuchstaben bleiben erhalten)
   if ($('inv-pw').checked && S.pw) p.set('pwx', pwToHex(S.pw));
   return location.origin + location.pathname + (LOCAL ? '?local' : '') + '#' + p.toString();
@@ -883,7 +884,7 @@ $('inv-link').addEventListener('focus', (e) => e.target.select());
 if (navigator.share) {
   $('btn-share').classList.remove('hidden');
   $('btn-share').addEventListener('click', () => {
-    navigator.share({ title: 'BombRe', text: 'Spiel mit mir BombRe, Raum „' + S.room + '“:', url: inviteLink() }).catch(() => {});
+    navigator.share({ title: 'BombRe', text: 'Spiel mit mir BombRe, Raum „' + (S.roomName || S.room) + '“:', url: inviteLink() }).catch(() => {});
   });
 }
 function renderSettings(st, isHost) {
@@ -924,6 +925,8 @@ function loadSavedSettings() {
 }
 
 function renderLobby(m) {
+  // Mitspieler sehen den Raumnamen so, wie der Gastgeber ihn geschrieben hat
+  if (m.roomName && slug(m.roomName) === S.room) { S.roomName = m.roomName; $('lobby-room').textContent = '„' + S.roomName + '“'; if ($('inv-link')) updateInvite(); }
   $('lobby-players').innerHTML = m.players.map((p) =>
     `<li><span class="dot" style="background:${p.color}"></span>${esc(p.name)}${p.id === 'host' ? ' <small>(Gastgeber)</small>' : ''}${p.id === S.myId ? ' <small>– du</small>' : ''}</li>`).join('');
   const isHost = S.role === 'host';
@@ -1151,15 +1154,15 @@ $('btn-random').onclick = () => {
 // Mit Einladungslink geöffnet? Raum und Passwort eintragen, dann den Link aus der Adresszeile nehmen.
 (function readInvite() {
   const h = new URLSearchParams(location.hash.slice(1));
-  const room = slug(h.get('raum') || '');
+  const roomName = (h.get('raum') || '').trim().slice(0, 24), room = slug(roomName);
   if (!room) return;
   // pwx = Passwort als Hex (neu), pw = Klartext (alte Links)
   const pw = hexToPw(h.get('pwx')) || h.get('pw') || '';
   if (pw) h.set('pw', pw);
-  $('in-room').value = room;
+  $('in-room').value = roomName;
   $('in-pass').value = pw;
   history.replaceState(null, '', location.pathname + location.search);
-  startMsg('Du bist in den Raum „' + room + '“ eingeladen. Name eingeben und „Raum beitreten“ drücken.' + (h.get('pw') ? '' : ' Das Passwort bekommst du vom Gastgeber.'));
+  startMsg('Du bist in den Raum „' + roomName + '“ eingeladen. Name eingeben und „Raum beitreten“ drücken.' + (h.get('pw') ? '' : ' Das Passwort bekommst du vom Gastgeber.'));
   $('btn-join').classList.remove('secondary'); $('btn-host').classList.add('secondary');
   setTimeout(() => $(h.get('pw') && !$('in-name').value ? 'in-name' : (h.get('pw') ? 'btn-join' : 'in-pass')).focus(), 0);
 })();
