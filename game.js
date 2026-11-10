@@ -849,9 +849,16 @@ function enterLobby() {
 
 // ---------- Einladungslink ----------
 // Raum (und auf Wunsch Passwort) stehen hinter dem #. Dieser Teil der Adresse wird nie an einen Server geschickt.
+function pwToHex(pw) { return [...new TextEncoder().encode(pw)].map((b) => b.toString(16).padStart(2, '0')).join(''); }
+function hexToPw(hex) {
+  hex = (hex || '').toLowerCase();
+  if (!/^([0-9a-f]{2})+$/.test(hex)) return '';
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(hex.match(/../g).map((h) => parseInt(h, 16)))); } catch (e) { return ''; }
+}
 function inviteLink() {
   const p = new URLSearchParams({ raum: S.room });
-  if ($('inv-pw').checked && S.pw) p.set('pw', S.pw);
+  // Passwort als Hex-Code: übersteht auch Apps, die den Link in Kleinbuchstaben umwandeln (Großbuchstaben bleiben erhalten)
+  if ($('inv-pw').checked && S.pw) p.set('pwx', pwToHex(S.pw));
   return location.origin + location.pathname + (LOCAL ? '?local' : '') + '#' + p.toString();
 }
 function updateInvite() {
@@ -1146,8 +1153,11 @@ $('btn-random').onclick = () => {
   const h = new URLSearchParams(location.hash.slice(1));
   const room = slug(h.get('raum') || '');
   if (!room) return;
+  // pwx = Passwort als Hex (neu), pw = Klartext (alte Links)
+  const pw = hexToPw(h.get('pwx')) || h.get('pw') || '';
+  if (pw) h.set('pw', pw);
   $('in-room').value = room;
-  $('in-pass').value = h.get('pw') || '';
+  $('in-pass').value = pw;
   history.replaceState(null, '', location.pathname + location.search);
   startMsg('Du bist in den Raum „' + room + '“ eingeladen. Name eingeben und „Raum beitreten“ drücken.' + (h.get('pw') ? '' : ' Das Passwort bekommst du vom Gastgeber.'));
   $('btn-join').classList.remove('secondary'); $('btn-host').classList.add('secondary');
