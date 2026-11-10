@@ -50,7 +50,7 @@ function cleanSettings(o) {
   const mode = MODES[o.mode] ? o.mode : DEFAULT_SETTINGS.mode;
   return {
     mode,
-    players: Math.max(mode === 'klassisch' ? 4 : 2, Math.min(MAX_PLAYERS, o.players | 0 || DEFAULT_SETTINGS.players)),
+    players: MAX_PLAYERS, // feste Obergrenze, keine Einstellung mehr
     variant: VARIANTS[o.variant] ? o.variant : DEFAULT_SETTINGS.variant,
     size: SIZES[o.size] ? o.size : DEFAULT_SETTINGS.size,
     items: Math.max(0, Math.min(100, Math.round((+o.items || 0) / 5) * 5)),
@@ -68,7 +68,7 @@ function cleanSettings(o) {
 function rulesFor(st, joined) {
   st = cleanSettings(st);
   if (st.mode === 'klassisch') {
-    const n = Math.max(4, Math.min(6, Math.max(st.players, joined)));
+    const n = Math.max(4, Math.min(6, joined | 0));
     return { ...st, variant: 'klassisch', items: 30, wins: WIN_ROUNDS, mega: 0, dims: CLASSIC_SIZE[n] };
   }
   return { ...st, dims: SIZES[st.size] };
@@ -249,6 +249,13 @@ class Game {
   }
   startRound() {
     this.round++;
+    for (const p of this.players) p.waiting = false;
+    if (this.rules.mode === 'klassisch') {
+      // Klassisch: Feldgröße folgt der Zahl der Spieler, die gerade da sind
+      this.rules = rulesFor(this.settings, this.players.length);
+      const [w, h] = this.rules.dims;
+      if (w !== W || h !== H) { applySize(w, h); this.grid = new Array(W * H).fill(EMPTY); }
+    }
     this.buildMap();
     this.bombs = []; this.flames = []; this.items = [];
     this.players.forEach((p) => {
@@ -499,7 +506,7 @@ class Game {
   checkRoundEnd(force) {
     if (this.phase !== 'play') return;
     const alive = this.players.filter((p) => p.alive);
-    const solo = this.players.length === 1;
+    const solo = this.players.filter((p) => !p.waiting).length === 1;
     const over = force || (solo ? alive.length === 0 : alive.length <= 1);
     if (!over) return;
     if (alive.length === 1 && !solo) {
@@ -519,7 +526,7 @@ class Game {
       players: this.players.map((p) => ({ id: p.id, name: p.name, color: p.color, score: p.score, alive: p.alive,
         x: +p.x.toFixed(3), y: +p.y.toFixed(3), dir: p.dir, moving: p.moving, bombs: p.maxBombs, range: p.range,
         speed: Math.round((p.speed - BASE_SPEED) / SPEED_STEP), kick: p.kick,
-        pierce: p.pierce, shield: p.shield, ghost: Math.ceil(p.ghost), grace: p.grace > 0, remote: p.remote })),
+        pierce: p.pierce, shield: p.shield, ghost: Math.ceil(p.ghost), grace: p.grace > 0, remote: p.remote, waiting: !!p.waiting })),
       bombs: this.bombs.map((b) => [b.x, b.y, +b.fuse.toFixed(2), b.remote ? 1 : 0]),
       flames: this.flames.map((f) => [f.x, f.y]),
       items: this.items.map((i) => [i.x, i.y, i.type]),
@@ -605,6 +612,29 @@ const S = {
 // Nachrichten laufen über den Gastgeber: Mitspieler schicken {t:'chat', text}, der Gastgeber setzt Name und
 // Farbe des Absenders dazu und verteilt die Nachricht an alle. Gespeichert wird nichts, nur die letzten
 // Nachrichten der laufenden Sitzung (neue Mitspieler bekommen die letzten 20).
+function cleanName(n) { return String(n || '').replace(/\s+/g, ' ').trim().slice(0, 12) || 'Spieler'; }
+// Namen ändern: läuft wie der Chat über den Gastgeber, der den neuen Namen an alle verteilt
+function renamePlayer(id, name) {
+  const p = S.game.players.find((q) => q.id === id);
+  if (!p) return;
+  name = cleanName(name);
+  if (name === p.name) return;
+  p.name = name;
+  broadcastLobby();
+  if (S.game.phase !== 'lobby') { const snap = S.game.snapshot(); for (const c of S.conns.values()) c.send(snap); S.view = snap; }
+}
+function changeMyName(name) {
+  name = cleanName(name);
+  $('in-name').value = name; $('my-name').value = name;
+  try { localStorage.setItem('ff-name', name); } catch (e) {}
+  if (S.role === 'host') renamePlayer('host', name);
+  else if (S.conn) S.conn.send({ t: 'rename', name });
+}
+function askName() {
+  const me = S.view && S.view.players && S.view.players.find((p) => p.id === S.myId);
+  const n = prompt('Dein Name (höchstens 12 Zeichen):', me ? me.name : $('in-name').value);
+  if (n !== null && n.trim()) changeMyName(n);
+}
 function hostChat(p, text) {
   text = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 200);
   if (!text) return;
@@ -756,11 +786,12 @@ function onClientConnect(conn) {
       const g = S.game;
       let reason = null;
       if (m.pw !== S.pwHash) reason = 'Falsches Passwort.';
-      else if (g.players.length >= cleanSettings(g.settings).players) reason = `Der Raum ist voll (maximal ${cleanSettings(g.settings).players} Spieler).`;
-      else if (g.phase !== 'lobby') reason = 'Das Spiel läuft schon. Warte, bis die Partie vorbei ist.';
+      else if (g.players.length >= MAX_PLAYERS) reason = `Der Raum ist voll (höchstens ${MAX_PLAYERS} Spieler).`;
       if (reason) { conn.send({ t: 'reject', reason }); setTimeout(() => conn.close(), 300); return; }
       pid = 'p' + Math.random().toString(36).slice(2, 8);
-      g.addPlayer(pid, String(m.name || 'Spieler').slice(0, 12));
+      const np = g.addPlayer(pid, cleanName(m.name));
+      // Läuft schon ein Spiel? Dann schaut der Neue zu und spielt ab der nächsten Runde mit.
+      if (g.phase !== 'lobby') np.waiting = true;
       S.conns.set(pid, conn);
       conn.send({ t: 'welcome', id: pid });
       conn.send({ t: 'chatlog', list: Chat.log.slice(-20) });
@@ -769,6 +800,7 @@ function onClientConnect(conn) {
       broadcastLobby();
       return;
     }
+    if (m.t === 'rename') { renamePlayer(pid, m.name); return; }
     if (m.t === 'chat') {
       const p = S.game.players.find((q) => q.id === pid);
       if (p) hostChat(p, m.text);
@@ -900,10 +932,8 @@ function renderSettings(st, isHost) {
   $('set-indiv').classList.toggle('hidden', classic);
   // Zünder-Knopf nur im Modus Individuell (bei Klassisch gibt es keine Mega-Items)
   document.body.classList.toggle('mode-klassisch', classic);
-  for (const o of form.players.options) o.hidden = classic && +o.value < 4;
-  const [cw, ch] = CLASSIC_SIZE[st.players] || CLASSIC_SIZE[4];
   $('mode-note').textContent = classic
-    ? `Klassische Regeln: 30 % Power-ups, keine Mega-Items. Feld ${cw} × ${ch}. Es wird endlos weitergespielt.`
+    ? 'Klassische Regeln: 30 % Power-ups, keine Mega-Items. Das Feld wächst mit der Zahl der Spieler (bis 6). Es wird endlos weitergespielt.'
     : 'Alles selbst einstellen: Variante, Feldgröße, Power-ups und Mega-Items. Es wird endlos weitergespielt.';
   $('set-items-val').textContent = st.items + ' %';
   $('set-mega-val').textContent = st.mega + ' %';
@@ -917,7 +947,7 @@ function renderSettings(st, isHost) {
 }
 function readSettings() {
   const f = $('settings');
-  return cleanSettings({ mode: f.querySelector('input[name=mode]:checked').value, players: f.players.value, variant: f.variant.value, size: f.size.value, items: f.items.value, wins: WIN_ROUNDS, mega: f.mega.value,
+  return cleanSettings({ mode: f.querySelector('input[name=mode]:checked').value, variant: f.variant.value, size: f.size.value, items: f.items.value, wins: WIN_ROUNDS, mega: f.mega.value,
     megaW: Object.fromEntries(MEGA_LIST.map((t) => [t, f['w_' + t].value])) });
 }
 function loadSavedSettings() {
@@ -925,6 +955,8 @@ function loadSavedSettings() {
 }
 
 function renderLobby(m) {
+  const me = m.players.find((p) => p.id === S.myId);
+  if (me && document.activeElement !== $('my-name')) $('my-name').value = me.name;
   // Mitspieler sehen den Raumnamen so, wie der Gastgeber ihn geschrieben hat
   if (m.roomName && slug(m.roomName) === S.room) { S.roomName = m.roomName; $('lobby-room').textContent = '„' + S.roomName + '“'; if ($('inv-link')) updateInvite(); }
   $('lobby-players').innerHTML = m.players.map((p) =>
@@ -933,7 +965,7 @@ function renderLobby(m) {
   $('btn-start').classList.toggle('hidden', !isHost);
   renderSettings(m.settings, isHost);
   $('lobby-hint').textContent = isHost
-    ? (m.players.length < 2 ? 'Warte auf Mitspieler. Schick ihnen den Einladungslink oben. (Allein starten geht zum Ausprobieren.)' : m.players.length + ' von ' + cleanSettings(m.settings).players + ' Spielern sind da.')
+    ? (m.players.length < 2 ? 'Warte auf Mitspieler. Schick ihnen den Einladungslink oben. (Allein starten geht zum Ausprobieren.)' : m.players.length + ' von höchstens ' + MAX_PLAYERS + ' Spielern sind da. Wer später kommt, steigt zur nächsten Runde ein.')
     : 'Warte, bis der Gastgeber das Spiel startet …';
 }
 
@@ -1057,7 +1089,7 @@ setCtl(ctlMode);
 // Wischen funktioniert im Spiel überall auf dem Bildschirm, außer auf Knöpfen, Eingabefeldern, dem Chat
 // und der Rangliste. Tippen legt keine Bombe mehr, dafür gibt es den 💣-Knopf.
 (function swipe() {
-  const SKIP = 'button, input, select, textarea, label, summary, a, .chat, .chat-toggle, .help-bubble, .ranking, .leave-row, .update-bar';
+  const SKIP = 'button, input, select, textarea, label, summary, a, .hud-p.me, .chat, .chat-toggle, .help-bubble, .ranking, .leave-row, .update-bar';
   let sw = null;
   document.addEventListener('pointerdown', (e) => {
     if (ctlMode !== 'wischen' || sw || !inGame() || e.pointerType === 'mouse') return;
@@ -1167,6 +1199,8 @@ $('btn-random').onclick = () => {
   setTimeout(() => $(h.get('pw') && !$('in-name').value ? 'in-name' : (h.get('pw') ? 'btn-join' : 'in-pass')).focus(), 0);
 })();
 
+$('name-form').addEventListener('submit', (e) => { e.preventDefault(); changeMyName($('my-name').value); $('my-name').blur(); });
+$('hud').addEventListener('click', (e) => { if (e.target.closest('.hud-p.me')) askName(); });
 $('settings').addEventListener('input', () => {
   if (S.role !== 'host' || S.game.phase !== 'lobby') return;
   S.game.settings = readSettings();
@@ -1298,7 +1332,8 @@ function draw(v, isHost) {
 
   // Anzeige oben
   const hud = v.players.map((p) =>
-    `<span class="hud-p${p.alive || v.phase === 'lobby' ? '' : ' dead'}"><span class="dot" style="background:${p.color}"></span>${esc(p.name)} <b title="Siege in dieser Sitzung">🏆 ${p.score}</b>` +
+    `<span class="hud-p${p.alive || v.phase === 'lobby' ? '' : ' dead'}${p.id === S.myId ? ' me' : ''}"${p.id === S.myId ? ' title="Antippen, um deinen Namen zu ändern"' : ''}><span class="dot" style="background:${p.color}"></span>${esc(p.name)} <b title="Siege in dieser Sitzung">🏆 ${p.score}</b>` +
+    (p.waiting ? ' <small>👀 ab nächster Runde</small>' : '') +
     (p.id === S.myId ? ` <small>💣${p.bombs} 🔥${p.range} 👟${p.speed}${p.kick ? ' 🦶' : ''}${p.pierce ? ' 💥' : ''}${p.shield ? ' 🛡️' : ''}${p.ghost ? ' 👻' + p.ghost : ''}${p.remote ? ' 🧨 Strg' : ''}</small>` : '') + '</span>').join('');
   if (hud !== lastHud) { $('hud').innerHTML = hud; lastHud = hud; }
   const ov = $('overlay');
