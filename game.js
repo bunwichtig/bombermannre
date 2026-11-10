@@ -1196,7 +1196,9 @@ $('btn-random').onclick = () => {
   history.replaceState(null, '', location.pathname + location.search);
   startMsg('Du bist in den Raum „' + roomName + '“ eingeladen. Name eingeben und „Raum beitreten“ drücken.' + (h.get('pw') ? '' : ' Das Passwort bekommst du vom Gastgeber.'));
   $('btn-join').classList.remove('secondary'); $('btn-host').classList.add('secondary');
-  setTimeout(() => $(h.get('pw') && !$('in-name').value ? 'in-name' : (h.get('pw') ? 'btn-join' : 'in-pass')).focus(), 0);
+  // Mit Passwort im Link: gleich beitreten (Name kommt aus dem letzten Besuch oder ist zufällig, ändern geht in der Lobby)
+  if (pw) { startMsg('Du trittst dem Raum „' + roomName + '“ bei …'); setTimeout(joinRoom, 0); return; }
+  setTimeout(() => $('in-pass').focus(), 0);
 })();
 
 $('name-form').addEventListener('submit', (e) => { e.preventDefault(); changeMyName($('my-name').value); $('my-name').blur(); });
