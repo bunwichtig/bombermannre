@@ -90,6 +90,10 @@
     <div class="panel lcard">
       <h2>Raum <span id="lobby-room"></span></h2>
       <ul id="lobby-players"></ul>
+      <form id="name-form" class="name-form" autocomplete="off">
+        <label for="my-name">Dein Name</label>
+        <div class="inv-row"><input id="my-name" maxlength="12" spellcheck="false"><button type="submit" class="secondary">Ändern</button></div>
+      </form>
     </div>
     <div class="panel lcard invite">
       <h2>🔗 Einladen</h2>
@@ -110,11 +114,6 @@
         <label><input type="radio" name="mode" value="individuell"><span>Individuell</span></label>
       </div>
       <p id="mode-note" class="note"></p>
-      <label>Spieler im Raum (höchstens)
-        <select name="players">
-          <option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option>
-        </select>
-      </label>
       <div id="set-indiv">
       <label>Spielvariante
         <select name="variant">

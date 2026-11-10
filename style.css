@@ -59,6 +59,10 @@ summary { cursor: pointer; color: var(--text); }
 #hud { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 8px; font-size: .9rem; }
 .hud-p { display: flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--panel); border-radius: 999px; border: 1px solid var(--border); }
 .hud-p.dead { opacity: .45; }
+.hud-p.me { cursor: pointer; }
+.name-form { margin-top: 12px; }
+.name-form label { display: block; margin-bottom: 4px; }
+.name-form .inv-row input { font-size: 1rem; flex-basis: 140px; }
 .hud-t { padding: 4px 10px; font-variant-numeric: tabular-nums; color: var(--muted); }
 #stage { position: relative; width: 100%; margin: 0 auto; }
 canvas { display: block; width: 100%; height: auto; border-radius: 8px; image-rendering: pixelated; }
